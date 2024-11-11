@@ -43,55 +43,88 @@ h1 {
 
 .add-task-container {
   display: flex;
-  justify-content: center;
+  gap: 10px;
   margin-top: 10px;
 }
 
+.add-task-container input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 .add-task-container button {
+  padding: 8px 12px;
   font-size: 14px;
   background-color: #28a745;
   color: #ffffff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  padding: 8px 12px;
 }
 
 .add-task-container button:hover {
   background-color: #218838;
 }
 
-.task-list {
-  margin-top: 10px;
-  padding: 0;
+.tasks-list {
   list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
-.task-list li {
+.task-item {
+  background: #e3e3e3;
+  margin-top: 5px;
+  padding: 8px;
+  border-radius: 4px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 10px;
 }
 
-.task-list li .task-text {
-  flex-grow: 1;
-}
-
-.task-list li .task-text.done {
+.task-item.done span {
   text-decoration: line-through;
+  color: #6c757d;
 }
 
-.delete-task {
-  color: red;
+.task-item button {
+  background: none;
+  border: none;
+  color: #d9534f;
   cursor: pointer;
-  font-size: 18px;
-  margin-left: 10px;
+  font-size: 1.2em;
 }
 
-/* Медиазапрос для мобильных устройств */
-@media (max-width: 768px) {
-  .calendar-day {
-    padding: 10px;
-  }
+.task-item button:hover {
+  text-decoration: underline;
+}
+
+.task-item .task-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+.add-task-container button i, .task-item button i {
+  font-size: 1.5em;
+  color: #fff;
+}
+
+/* Стиль для кнопок */
+.add-task-container button {
+  background-color: #28a745;
+}
+
+.add-task-container button:hover {
+  background-color: #218838;
+}
+
+.task-item button {
+  color: #d9534f;
+}
+
+.task-item button:hover {
+  color: #c9302c;
 }
