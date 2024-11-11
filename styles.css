@@ -14,7 +14,7 @@ body {
   #calendar {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     max-width: 300px;
     margin-bottom: 20px;
   }
