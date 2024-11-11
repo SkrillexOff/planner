@@ -32,7 +32,6 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .day-date {
@@ -41,48 +40,20 @@ h1 {
   color: #333;
 }
 
-.add-task-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.add-task-container input {
-  flex: 1;
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.add-task-container button {
-  padding: 8px 12px;
-  font-size: 14px;
-  background-color: #28a745;
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.add-task-container button:hover {
-  background-color: #218838;
-}
-
 .tasks-list {
   list-style-type: none;
   padding: 0;
-  margin: 0;
+  margin: 10px 0;
 }
 
 .task-item {
-  background: #e3e3e3;
-  margin-top: 5px;
-  padding: 8px;
-  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 8px;
+  background: #e3e3e3;
+  border-radius: 4px;
+  margin-top: 5px;
 }
 
 .task-item.done span {
@@ -94,37 +65,60 @@ h1 {
   background: none;
   border: none;
   color: #d9534f;
+  font-size: 1.2em;
   cursor: pointer;
+}
+
+.add-task-btn {
+  background-color: #007bff;
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-task-btn i {
   font-size: 1.2em;
 }
 
-.task-item button:hover {
-  text-decoration: underline;
+/* Модальное окно */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-.task-item .task-checkbox {
-  width: 20px;
-  height: 20px;
+.modal-content {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
 }
 
-.add-task-container button i, .task-item button i {
-  font-size: 1.5em;
-  color: #fff;
+.modal.show .modal-content {
+  transform: translateY(0);
 }
 
-/* Стиль для кнопок */
-.add-task-container button {
-  background-color: #28a745;
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.add-task-container button:hover {
-  background-color: #218838;
-}
-
-.task-item button {
-  color: #d9534f;
-}
-
-.task-item button:hover {
-  color: #c9302c;
+.close-btn:hover {
+  color: #000;
 }
