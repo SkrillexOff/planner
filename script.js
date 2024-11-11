@@ -54,6 +54,37 @@ function createCalendar() {
     addTaskContainer.appendChild(addTaskBtn);
     dayEl.appendChild(addTaskContainer);
 
+    // Список задач
+    const taskList = document.createElement('ul');
+    taskList.classList.add('task-list');
+    const tasks = JSON.parse(localStorage.getItem(formatDateISO(day))) || [];
+    tasks.forEach(task => {
+      const taskItem = document.createElement('li');
+      const taskText = document.createElement('span');
+      taskText.classList.add('task-text');
+      if (task.done) taskText.classList.add('done');
+      taskText.textContent = task.text;
+      taskItem.appendChild(taskText);
+
+      // Кнопка удаления задачи
+      const deleteBtn = document.createElement('span');
+      deleteBtn.classList.add('delete-task');
+      deleteBtn.innerHTML = '&times;';
+      deleteBtn.onclick = () => {
+        removeTask(formatDateISO(day), task.text);
+      };
+      taskItem.appendChild(deleteBtn);
+
+      // Кнопка для завершения задачи
+      taskText.onclick = () => {
+        toggleTaskDone(formatDateISO(day), task.text);
+      };
+
+      taskList.appendChild(taskItem);
+    });
+
+    dayEl.appendChild(taskList);
+
     // Добавляем день в календарь
     calendarEl.appendChild(dayEl);
   }
@@ -92,6 +123,27 @@ function addTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks.push({ text: taskText, done: false });
   localStorage.setItem(date, JSON.stringify(tasks));
+  createCalendar(); // Обновляем календарь
+}
+
+// Функция для удаления задачи
+function removeTask(date, taskText) {
+  let tasks = JSON.parse(localStorage.getItem(date)) || [];
+  tasks = tasks.filter(task => task.text !== taskText);
+  localStorage.setItem(date, JSON.stringify(tasks));
+  createCalendar(); // Обновляем календарь
+}
+
+// Функция для изменения состояния задачи
+function toggleTaskDone(date, taskText) {
+  let tasks = JSON.parse(localStorage.getItem(date)) || [];
+  tasks.forEach(task => {
+    if (task.text === taskText) {
+      task.done = !task.done;
+    }
+  });
+  localStorage.setItem(date, JSON.stringify(tasks));
+  createCalendar(); // Обновляем календарь
 }
 
 // Инициализация календаря при загрузке страницы

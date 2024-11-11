@@ -149,3 +149,29 @@ h1 {
     display: block;
   }
 }
+
+.task-list {
+  margin-top: 10px;
+  padding: 0;
+  list-style-type: none;
+}
+
+.task-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.task-list li .task-text {
+  flex-grow: 1;
+}
+
+.task-list li .task-text.done {
+  text-decoration: line-through;
+}
+
+.delete-task {
+  color: red;
+  cursor: pointer;
+}
