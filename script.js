@@ -31,6 +31,11 @@ function createCalendar() {
     dayHeader.appendChild(dayDate);
     dayEl.appendChild(dayHeader);
 
+    // Список задач
+    const taskList = document.createElement('ul');
+    taskList.classList.add('tasks-list');
+    dayEl.appendChild(taskList);
+
     // Контейнер для добавления задач
     const addTaskContainer = document.createElement('div');
     addTaskContainer.classList.add('add-task-container');
@@ -57,11 +62,6 @@ function createCalendar() {
     addTaskContainer.appendChild(addTaskInput);
     addTaskContainer.appendChild(addTaskBtn);
     dayEl.appendChild(addTaskContainer);
-
-    // Список задач
-    const taskList = document.createElement('ul');
-    taskList.classList.add('tasks-list');
-    dayEl.appendChild(taskList);
 
     // Добавляем день в календарь
     calendarEl.appendChild(dayEl);
