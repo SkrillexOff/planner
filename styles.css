@@ -93,9 +93,10 @@ h1 {
 .task-item button {
   background: none;
   border: none;
-  color: #d9534f;
+  color: #d9534f; /* Красный цвет крестика */
   cursor: pointer;
   font-size: 1.2em;
+  margin-left: auto; /* Выровнять крестик по правому краю */
 }
 
 .task-item button:hover {
