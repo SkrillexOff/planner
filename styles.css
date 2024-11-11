@@ -95,9 +95,36 @@ h1 {
   border: none;
   color: #d9534f;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 1.2em;
 }
 
 .task-item button:hover {
   text-decoration: underline;
+}
+
+.task-item .task-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+.add-task-container button i, .task-item button i {
+  font-size: 1.5em;
+  color: #fff;
+}
+
+/* Стиль для кнопок */
+.add-task-container button {
+  background-color: #28a745;
+}
+
+.add-task-container button:hover {
+  background-color: #218838;
+}
+
+.task-item button {
+  color: #d9534f;
+}
+
+.task-item button:hover {
+  color: #c9302c;
 }

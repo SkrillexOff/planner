@@ -46,7 +46,7 @@ function createCalendar() {
     addTaskInput.classList.add('add-task-input');
 
     const addTaskBtn = document.createElement('button');
-    addTaskBtn.textContent = 'Добавить';
+    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i>'; // Иконка "плюс"
     addTaskBtn.classList.add('add-task-btn');
 
     // Обработчик клика по кнопке "Добавить"
@@ -91,6 +91,7 @@ function updateDayTasks(dayEl, date) {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.classList.add('task-checkbox');
     checkbox.checked = task.done;
     checkbox.onchange = () => {
       toggleTaskStatus(date, task.text);
@@ -101,7 +102,7 @@ function updateDayTasks(dayEl, date) {
     taskText.textContent = task.text;
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Удалить';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>'; // Иконка "крестик"
     deleteBtn.onclick = () => {
       deleteTask(date, task.text);
       updateDayTasks(dayEl, date);
@@ -128,8 +129,3 @@ function toggleTaskStatus(date, taskText) {
 function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks = tasks.filter(task => task.text !== taskText);
-  localStorage.setItem(date, JSON.stringify(tasks));
-}
-
-// Инициализация календаря при загрузке страницы
-document.addEventListener('DOMContentLoaded', createCalendar);
