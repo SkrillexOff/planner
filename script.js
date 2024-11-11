@@ -6,18 +6,22 @@ const closeBtn = document.querySelector('.close-btn');
 
 let selectedDate = null;
 
-// Открытие модального окна или bottom sheet
+// Проверка типа устройства
+function isMobileDevice() {
+  return window.innerWidth <= 768;
+}
+
+// Открытие модального окна
 function openModal(date) {
-  console.log(`Открытие модального окна для даты: ${date}`);
   selectedDate = date;
   taskModal.classList.add('show');
+  taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
 }
 
 // Закрытие модального окна
 function closeModal() {
-  console.log("Закрытие модального окна");
   taskModal.classList.remove('show');
   selectedDate = null;
 }
@@ -33,7 +37,6 @@ window.onclick = (event) => {
 // Добавление задачи
 addTaskButton.onclick = () => {
   const taskText = taskInput.value.trim();
-  console.log(`Нажата кнопка добавления задачи. Текст задачи: "${taskText}"`);
   if (taskText && selectedDate) {
     addTask(selectedDate, taskText);
     updateDayTasks(document.querySelector(`[data-date="${selectedDate}"]`), selectedDate);
@@ -70,18 +73,18 @@ function createCalendar() {
     });
 
     dayHeader.appendChild(dayDate);
-
-    const addTaskBtn = document.createElement('button');
-    addTaskBtn.classList.add('add-task-btn');
-    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i>';
-    addTaskBtn.onclick = () => openModal(formatDateISO(day));
-
-    dayHeader.appendChild(addTaskBtn);
     dayEl.appendChild(dayHeader);
 
     const taskList = document.createElement('ul');
     taskList.classList.add('tasks-list');
     dayEl.appendChild(taskList);
+
+    // Кнопка добавления задачи
+    const addTaskBtn = document.createElement('button');
+    addTaskBtn.classList.add('add-task-btn');
+    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
+    addTaskBtn.onclick = () => openModal(formatDateISO(day));
+    dayEl.appendChild(addTaskBtn);
 
     calendarEl.appendChild(dayEl);
     updateDayTasks(dayEl, formatDateISO(day));
@@ -90,7 +93,6 @@ function createCalendar() {
 
 // Добавление задачи
 function addTask(date, taskText) {
-  console.log(`Добавление задачи для даты ${date}: "${taskText}"`);
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks.push({ text: taskText, done: false });
   localStorage.setItem(date, JSON.stringify(tasks));
@@ -131,9 +133,9 @@ function updateDayTasks(dayEl, date) {
 
 function toggleTaskStatus(date, taskText) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  const task = tasks.find((task) => task.text === taskText);
-  if (task) {
-    task.done = !task.done;
+  const taskIndex = tasks.findIndex((task) => task.text === taskText);
+  if (taskIndex !== -1) {
+    tasks[taskIndex].done = !tasks[taskIndex].done;
     localStorage.setItem(date, JSON.stringify(tasks));
   }
 }
@@ -144,5 +146,4 @@ function deleteTask(date, taskText) {
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
-// Инициализация
 document.addEventListener('DOMContentLoaded', createCalendar);
