@@ -43,89 +43,109 @@ h1 {
 
 .add-task-container {
   display: flex;
-  gap: 10px;
+  justify-content: center;
   margin-top: 10px;
 }
 
-.add-task-container input {
-  flex: 1;
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
 .add-task-container button {
-  padding: 8px 12px;
   font-size: 14px;
   background-color: #28a745;
   color: #ffffff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  padding: 8px 12px;
 }
 
 .add-task-container button:hover {
   background-color: #218838;
 }
 
-.tasks-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+/* Модальное окно */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); 
 }
 
-.task-item {
-  background: #e3e3e3;
-  margin-top: 5px;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 400px;
+  border-radius: 8px;
 }
 
-.task-item.done span {
-  text-decoration: line-through;
-  color: #6c757d;
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
 }
 
-.task-item button {
-  background: none;
-  border: none;
-  color: #d9534f; /* Красный цвет крестика */
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
   cursor: pointer;
-  font-size: 1.2em;
-  margin-left: auto; /* Выровнять крестик по правому краю */
 }
 
-.task-item button:hover {
-  text-decoration: underline;
+/* Bottom sheet для мобильных */
+.bottom-sheet {
+  display: none; 
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-radius: 10px 10px 0 0;
 }
 
-.task-item .task-checkbox {
-  width: 20px;
-  height: 20px;
+.bottom-sheet-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.add-task-container button i, .task-item button i {
-  font-size: 1.5em;
-  color: #fff;
+#task-input-bottom {
+  padding: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-/* Стиль для кнопок */
-.add-task-container button {
+#add-task-btn-bottom {
+  padding: 8px 12px;
+  font-size: 14px;
   background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.add-task-container button:hover {
+#add-task-btn-bottom:hover {
   background-color: #218838;
 }
 
-.task-item button {
-  color: #d9534f;
-}
+/* Медиазапрос для мобильных устройств */
+@media (max-width: 768px) {
+  .modal {
+    display: none;
+  }
 
-.task-item button:hover {
-  color: #c9302c;
+  .bottom-sheet {
+    display: block;
+  }
 }
