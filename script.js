@@ -129,4 +129,8 @@ function toggleTaskStatus(date, taskText) {
 function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks = tasks.filter(task => task.text !== taskText);
+  localStorage.setItem(date, JSON.stringify(tasks));
 }
+
+// Инициализация календаря при загрузке страницы
+document.addEventListener('DOMContentLoaded', createCalendar);
