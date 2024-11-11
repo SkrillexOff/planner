@@ -5,45 +5,84 @@ body {
   align-items: center;
   margin: 0;
   padding: 20px;
+  background-color: #f9f9f9;
 }
 
 h1 {
   color: #333;
+  margin-bottom: 20px;
 }
 
 #calendar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 300px;
-  margin-bottom: 20px;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .calendar-day {
-  background: #f0f0f0;
-  padding: 10px;
-  border-radius: 5px;
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .day-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 10px;
+}
+
+.day-date {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.add-task-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.add-task-container input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-task-container button {
+  padding: 8px 12px;
+  font-size: 14px;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.add-task-container button:hover {
+  background-color: #218838;
 }
 
 .tasks-list {
-  margin-top: 5px;
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .task-item {
   background: #e3e3e3;
   margin-top: 5px;
-  padding: 6px;
-  border-radius: 3px;
+  padding: 8px;
+  border-radius: 4px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .task-item button {
@@ -51,11 +90,9 @@ h1 {
   border: none;
   color: #d9534f;
   cursor: pointer;
+  font-size: 0.9em;
 }
 
-.add-task-input {
-  width: 100%;
-  margin-top: 5px;
-  padding: 5px;
-  font-size: 14px;
+.task-item button:hover {
+  text-decoration: underline;
 }

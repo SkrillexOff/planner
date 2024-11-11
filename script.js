@@ -1,9 +1,14 @@
 const calendarEl = document.getElementById('calendar');
 
-// Создаем календарь с задачами
+// Функция для форматирования даты в ISO формате (YYYY-MM-DD)
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
+}
+
+// Функция для создания календаря с задачами
 function createCalendar() {
   const today = new Date();
-  
+
   for (let i = 0; i < 30; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
@@ -11,44 +16,69 @@ function createCalendar() {
     const dayEl = document.createElement('div');
     dayEl.classList.add('calendar-day');
 
+    // Заголовок дня
     const dayHeader = document.createElement('div');
     dayHeader.classList.add('day-header');
-    dayHeader.textContent = day.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric' });
-    
+
+    const dayDate = document.createElement('div');
+    dayDate.classList.add('day-date');
+    dayDate.textContent = day.toLocaleDateString('ru-RU', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'numeric'
+    });
+
+    dayHeader.appendChild(dayDate);
+    dayEl.appendChild(dayHeader);
+
+    // Контейнер для добавления задач
+    const addTaskContainer = document.createElement('div');
+    addTaskContainer.classList.add('add-task-container');
+
     const addTaskInput = document.createElement('input');
-    addTaskInput.classList.add('add-task-input');
+    addTaskInput.type = 'text';
     addTaskInput.placeholder = "Новая задача...";
-    addTaskInput.onkeypress = (e) => {
-      if (e.key === 'Enter' && addTaskInput.value.trim()) {
-        addTask(day.toISOString().split('T')[0], addTaskInput.value.trim());
+    addTaskInput.classList.add('add-task-input');
+
+    const addTaskBtn = document.createElement('button');
+    addTaskBtn.textContent = 'Добавить';
+    addTaskBtn.classList.add('add-task-btn');
+
+    // Обработчик клика по кнопке "Добавить"
+    addTaskBtn.onclick = () => {
+      const taskText = addTaskInput.value.trim();
+      if (taskText) {
+        addTask(formatDateISO(day), taskText);
         addTaskInput.value = '';
-        updateDayTasks(dayEl, day.toISOString().split('T')[0]);
+        updateDayTasks(dayEl, formatDateISO(day));
       }
     };
 
+    addTaskContainer.appendChild(addTaskInput);
+    addTaskContainer.appendChild(addTaskBtn);
+    dayEl.appendChild(addTaskContainer);
+
+    // Список задач
     const taskList = document.createElement('ul');
     taskList.classList.add('tasks-list');
-    
-    dayEl.appendChild(dayHeader);
     dayEl.appendChild(taskList);
-    dayEl.appendChild(addTaskInput);
-    
-    // Добавляем элемент дня в календарь
+
+    // Добавляем день в календарь
     calendarEl.appendChild(dayEl);
 
-    // Обновляем задачи для текущей даты
-    updateDayTasks(dayEl, day.toISOString().split('T')[0]);
+    // Загружаем и отображаем задачи для этого дня
+    updateDayTasks(dayEl, formatDateISO(day));
   }
 }
 
-// Добавление задачи в localStorage и обновление отображения
+// Функция для добавления задачи в localStorage и обновления отображения
 function addTask(date, taskText) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks.push(taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
-// Обновление задач для дня
+// Функция для обновления списка задач для конкретного дня
 function updateDayTasks(dayEl, date) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   const taskList = dayEl.querySelector('.tasks-list');
@@ -57,7 +87,9 @@ function updateDayTasks(dayEl, date) {
   tasks.forEach(task => {
     const taskEl = document.createElement('li');
     taskEl.classList.add('task-item');
-    taskEl.textContent = task;
+
+    const taskText = document.createElement('span');
+    taskText.textContent = task;
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Удалить';
@@ -66,17 +98,18 @@ function updateDayTasks(dayEl, date) {
       updateDayTasks(dayEl, date);
     };
 
+    taskEl.appendChild(taskText);
     taskEl.appendChild(deleteBtn);
     taskList.appendChild(taskEl);
   });
 }
 
-// Удаление задачи из localStorage
+// Функция для удаления задачи из localStorage
 function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks = tasks.filter(task => task !== taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
-// Инициализация календаря
-createCalendar();
+// Инициализация календаря при загрузке страницы
+document.addEventListener('DOMContentLoaded', createCalendar);
