@@ -66,13 +66,14 @@ function createCalendar() {
 
     const dayDate = document.createElement('div');
     dayDate.classList.add('day-date');
-    dayDate.textContent = day.toLocaleDateString('ru-RU', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'numeric'
-    });
+    dayDate.innerHTML = `${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}`;
+
+    const dayWeekday = document.createElement('div');
+    dayWeekday.classList.add('day-weekday');
+    dayWeekday.textContent = day.toLocaleString('ru-RU', { weekday: 'long' });
 
     dayHeader.appendChild(dayDate);
+    dayHeader.appendChild(dayWeekday);
     dayEl.appendChild(dayHeader);
 
     const taskList = document.createElement('ul');
@@ -87,32 +88,38 @@ function createCalendar() {
     dayEl.appendChild(addTaskBtn);
 
     calendarEl.appendChild(dayEl);
+
+    // Загружаем задачи для дня
     updateDayTasks(dayEl, formatDateISO(day));
   }
 }
 
-// Добавление задачи
+// Добавление задачи в localStorage
 function addTask(date, taskText) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks.push({ text: taskText, done: false });
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
-// Обновление задач
+// Обновление списка задач для дня
 function updateDayTasks(dayEl, date) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   const taskList = dayEl.querySelector('.tasks-list');
   taskList.innerHTML = '';
 
-  tasks.forEach((task) => {
+  tasks.forEach(task => {
     const taskEl = document.createElement('li');
     taskEl.classList.add('task-item');
     if (task.done) taskEl.classList.add('done');
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.classList.add('task-checkbox');
     checkbox.checked = task.done;
-    checkbox.onchange = () => toggleTaskStatus(date, task.text);
+    checkbox.onchange = () => {
+      toggleTaskStatus(date, task.text);
+      updateDayTasks(dayEl, date);
+    };
 
     const taskText = document.createElement('span');
     taskText.textContent = task.text;
@@ -131,19 +138,22 @@ function updateDayTasks(dayEl, date) {
   });
 }
 
+// Изменение статуса задачи
 function toggleTaskStatus(date, taskText) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  const taskIndex = tasks.findIndex((task) => task.text === taskText);
+  const taskIndex = tasks.findIndex(task => task.text === taskText);
   if (taskIndex !== -1) {
     tasks[taskIndex].done = !tasks[taskIndex].done;
     localStorage.setItem(date, JSON.stringify(tasks));
   }
 }
 
+// Удаление задачи
 function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
-  tasks = tasks.filter((task) => task.text !== taskText);
+  tasks = tasks.filter(task => task.text !== taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
+// Инициализация календаря
 document.addEventListener('DOMContentLoaded', createCalendar);

@@ -30,14 +30,20 @@ h1 {
 
 .day-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
 }
 
 .day-date {
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1.5em;
   color: #333;
+}
+
+.day-weekday {
+  font-size: 0.9em;
+  color: #777;
 }
 
 .tasks-list {
@@ -106,6 +112,7 @@ h1 {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  animation: slide-up 250ms ease-out;
 }
 
 .modal.show.desktop {
@@ -117,8 +124,8 @@ h1 {
   max-width: 400px;
   background-color: #ffffff;
   padding: 20px;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.25s ease;
 }
 
@@ -145,6 +152,7 @@ h1 {
   border: none;
   resize: none;
   outline: none;
+  min-height: 80px;
 }
 
 #addTaskButton {
@@ -159,6 +167,16 @@ h1 {
 }
 
 /* Анимация для модального окна на мобильных устройствах */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Адаптация для мобильных */
 @media (max-width: 768px) {
   .modal-content {
     transform: translateY(100%);
