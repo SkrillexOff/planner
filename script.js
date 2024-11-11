@@ -74,7 +74,7 @@ function createCalendar() {
 // Функция для добавления задачи в localStorage и обновления отображения
 function addTask(date, taskText) {
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  tasks.push(taskText);
+  tasks.push({ text: taskText, done: false });
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 
@@ -87,27 +87,47 @@ function updateDayTasks(dayEl, date) {
   tasks.forEach(task => {
     const taskEl = document.createElement('li');
     taskEl.classList.add('task-item');
+    if (task.done) taskEl.classList.add('done');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = task.done;
+    checkbox.onchange = () => {
+      toggleTaskStatus(date, task.text);
+      updateDayTasks(dayEl, date);
+    };
 
     const taskText = document.createElement('span');
-    taskText.textContent = task;
+    taskText.textContent = task.text;
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Удалить';
     deleteBtn.onclick = () => {
-      deleteTask(date, task);
+      deleteTask(date, task.text);
       updateDayTasks(dayEl, date);
     };
 
+    taskEl.appendChild(checkbox);
     taskEl.appendChild(taskText);
     taskEl.appendChild(deleteBtn);
     taskList.appendChild(taskEl);
   });
 }
 
+// Функция для изменения статуса задачи в localStorage
+function toggleTaskStatus(date, taskText) {
+  const tasks = JSON.parse(localStorage.getItem(date)) || [];
+  const taskIndex = tasks.findIndex(task => task.text === taskText);
+  if (taskIndex !== -1) {
+    tasks[taskIndex].done = !tasks[taskIndex].done;
+    localStorage.setItem(date, JSON.stringify(tasks));
+  }
+}
+
 // Функция для удаления задачи из localStorage
 function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
-  tasks = tasks.filter(task => task !== taskText);
+  tasks = tasks.filter(task => task.text !== taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
 }
 

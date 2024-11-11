@@ -81,8 +81,13 @@ h1 {
   padding: 8px;
   border-radius: 4px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+
+.task-item.done span {
+  text-decoration: line-through;
+  color: #6c757d;
 }
 
 .task-item button {
