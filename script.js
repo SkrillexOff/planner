@@ -8,14 +8,16 @@ let selectedDate = null;
 
 // Открытие модального окна или bottom sheet
 function openModal(date) {
+  console.log(`Открытие модального окна для даты: ${date}`);
   selectedDate = date;
   taskModal.classList.add('show');
   taskInput.value = '';
   taskInput.focus();
 }
 
-// Закрытие модального окна или bottom sheet
+// Закрытие модального окна
 function closeModal() {
+  console.log("Закрытие модального окна");
   taskModal.classList.remove('show');
   selectedDate = null;
 }
@@ -31,6 +33,7 @@ window.onclick = (event) => {
 // Добавление задачи
 addTaskButton.onclick = () => {
   const taskText = taskInput.value.trim();
+  console.log(`Нажата кнопка добавления задачи. Текст задачи: "${taskText}"`);
   if (taskText && selectedDate) {
     addTask(selectedDate, taskText);
     updateDayTasks(document.querySelector(`[data-date="${selectedDate}"]`), selectedDate);
@@ -87,6 +90,7 @@ function createCalendar() {
 
 // Добавление задачи
 function addTask(date, taskText) {
+  console.log(`Добавление задачи для даты ${date}: "${taskText}"`);
   const tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks.push({ text: taskText, done: false });
   localStorage.setItem(date, JSON.stringify(tasks));
