@@ -5,6 +5,11 @@ body {
   align-items: center;
   margin: 0;
   background-color: #F5F5F0;
+  overflow-x: hidden;
+}
+
+body.modal-open {
+  overflow: hidden; /* Убираем скролл страницы при открытом модальном окне */
 }
 
 h1 {
@@ -107,14 +112,14 @@ h1 {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5); /* Затемнение фона */
+  animation: fade-in 0.25s ease; /* Анимация затемнения фона */
 }
 
 .modal.show {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: slide-up 250ms ease-out;
 }
 
 .modal.show.desktop {
@@ -128,11 +133,12 @@ h1 {
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transition: transform 0.25s ease;
+  transform: translateY(100%); /* Начальная позиция для анимации */
+  transition: transform 0.25s ease; /* Анимация для модального окна */
 }
 
 .modal.show .modal-content {
-  transform: translateY(0);
+  transform: translateY(0); /* Конечная позиция для анимации */
 }
 
 .close-btn {
@@ -169,19 +175,12 @@ h1 {
   font-size: 14px;
 }
 
-/* Анимация для модального окна на мобильных устройствах */
-@keyframes slide-up {
+/* Анимация для фона */
+@keyframes fade-in {
   from {
-    transform: translateY(100%);
+    background-color: rgba(0, 0, 0, 0);
   }
   to {
-    transform: translateY(0);
-  }
-}
-
-/* Адаптация для мобильных */
-@media (max-width: 768px) {
-  .modal-content {
-    transform: translateY(100%);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 }

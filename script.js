@@ -14,6 +14,7 @@ function isMobileDevice() {
 // Открытие модального окна
 function openModal(date) {
   selectedDate = date;
+  document.body.classList.add('modal-open'); // Отключаем скролл страницы
   taskModal.classList.add('show');
   taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
@@ -22,6 +23,7 @@ function openModal(date) {
 
 // Закрытие модального окна
 function closeModal() {
+  document.body.classList.remove('modal-open'); // Включаем скролл страницы
   taskModal.classList.remove('show');
   selectedDate = null;
 }
