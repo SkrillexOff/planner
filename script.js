@@ -11,22 +11,15 @@ function isMobileDevice() {
   return window.innerWidth <= 768;
 }
 
-// Открытие модального окна
-function openModal(date) {
-  selectedDate = date;
-  document.body.classList.add('modal-open'); // Отключаем скролл страницы
-  taskModal.classList.add('show');
-  taskModal.classList.toggle('desktop', !isMobileDevice());
-  taskInput.value = '';
-  taskInput.focus();
-
-  // Решение для iOS: адаптация высоты при появлении клавиатуры
+// Адаптация высоты при появлении клавиатуры
+function adjustForKeyboard() {
   if (isMobileDevice()) {
     const initialHeight = window.innerHeight;
 
     // Обработчик для сдвига окна при появлении клавиатуры
     function adjustForKeyboard() {
       if (window.innerHeight < initialHeight) {
+        // Вычисляем сдвиг и применяем к модальному окну
         taskModal.style.transform = `translateY(-${initialHeight - window.innerHeight}px)`;
       }
     }
@@ -36,10 +29,25 @@ function openModal(date) {
       taskModal.style.transform = 'translateY(0)';
     }
 
+    // Слушаем изменение размера окна
     window.addEventListener('resize', adjustForKeyboard);
-    taskInput.addEventListener('blur', resetPosition);
+    taskInput.addEventListener('blur', resetPosition); // при потере фокуса восстанавливаем положение
   }
 }
+
+// Изменение способа открытия модального окна для iOS
+function openModal(date) {
+  selectedDate = date;
+  document.body.classList.add('modal-open');
+  taskModal.classList.add('show');
+  taskModal.classList.toggle('desktop', !isMobileDevice());
+  taskInput.value = '';
+  taskInput.focus();
+
+  // Включаем обработку сдвига окна для клавиатуры на мобильных устройствах
+  adjustForKeyboard();
+}
+
 
 // Закрытие модального окна
 function closeModal() {
