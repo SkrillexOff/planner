@@ -1,5 +1,4 @@
-const tg = window.Telegram.WebApp;
-tg.init();
+// script.js
 
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
@@ -9,35 +8,33 @@ const closeBtn = document.querySelector('.close-btn');
 
 let selectedDate = null;
 
-// Инициализация Telegram WebApp
-const user = tg.initDataUnsafe;
-const userName = user?.user?.first_name || 'Гость';
-document.title = `Календарь задач - ${userName}`;
-
-tg.MainButton.setText('Закрыть');
-tg.MainButton.show();
-tg.MainButton.onClick(function() {
-  tg.close();
-});
+// Проверка типа устройства
+function isMobileDevice() {
+  return window.innerWidth <= 768;
+}
 
 // Открытие модального окна
 function openModal(date) {
   selectedDate = date;
-  document.body.classList.add('modal-open');
   taskModal.classList.add('show');
+  taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
 }
 
 // Закрытие модального окна
 function closeModal() {
-  document.body.classList.remove('modal-open');
   taskModal.classList.remove('show');
   selectedDate = null;
 }
 
 // Обработчик для кнопки закрытия
 closeBtn.onclick = closeModal;
+
+// Закрытие модального окна при клике вне его области
+window.onclick = (event) => {
+  if (event.target === taskModal) closeModal();
+};
 
 // Добавление задачи
 addTaskButton.onclick = () => {
@@ -46,11 +43,13 @@ addTaskButton.onclick = () => {
     addTask(selectedDate, taskText);
     updateDayTasks(document.querySelector(`[data-date="${selectedDate}"]`), selectedDate);
     closeModal();
-
-    // Отправка задачи в Telegram
-    tg.sendData(`Задача для ${selectedDate}: ${taskText}`);
   }
 };
+
+// Форматирование даты в ISO
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
+}
 
 // Создание календаря
 function createCalendar() {
@@ -156,11 +155,6 @@ function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks = tasks.filter(task => task.text !== taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
-}
-
-// Форматирование даты в ISO
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
 }
 
 // Инициализация календаря
