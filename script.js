@@ -1,4 +1,4 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase конфигурация
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
   authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
@@ -9,16 +9,8 @@ const firebaseConfig = {
   measurementId: "G-4V1NYWDVKF"
 };
 
-
 // Инициализация Firebase 
 firebase.initializeApp(firebaseConfig);
-
-
-
-// Проверка, инициализирован ли Firebase
-console.log("Firebase инициализирован:", firebase.apps.length > 0);
-
-// Сервисы Firebase
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -33,38 +25,31 @@ const closeBtns = document.querySelectorAll('.close-btn');
 
 let selectedDate = null;
 
-// Открытие модального окна задач
 function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
   taskInput.value = '';
   taskInput.focus();
-  console.log("Модальное окно для добавления задачи открыто. Дата:", selectedDate);
 }
 
-// Закрытие модальных окон
 function closeModal() {
   taskModal.classList.remove('show');
   authModal.classList.remove('show');
 }
 
-// Добавляем события для закрытия окон
 closeBtns.forEach(btn => btn.onclick = closeModal);
 window.onclick = (event) => {
   if (event.target === taskModal || event.target === authModal) closeModal();
 };
 
-// Функции регистрации и входа
 registerButton.onclick = async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   try {
     await auth.createUserWithEmailAndPassword(email, password);
-    console.log("Регистрация успешна для пользователя:", email);
     alert('Регистрация успешна!');
     closeModal();
   } catch (error) {
-    console.error("Ошибка регистрации:", error.message);
     alert(`Ошибка регистрации: ${error.message}`);
   }
 };
@@ -74,19 +59,15 @@ loginButton.onclick = async () => {
   const password = document.getElementById('password').value;
   try {
     await auth.signInWithEmailAndPassword(email, password);
-    console.log("Вход выполнен для пользователя:", email);
     alert('Вход выполнен успешно!');
     closeModal();
   } catch (error) {
-    console.error("Ошибка входа:", error.message);
     alert(`Ошибка входа: ${error.message}`);
   }
 };
 
-// Инициализация календаря
 function createCalendar() {
   const today = new Date();
-
   for (let i = 0; i < 30; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
@@ -114,23 +95,61 @@ function createCalendar() {
     taskList.classList.add('tasks-list');
     dayEl.appendChild(taskList);
 
-    // Кнопка добавления задачи
     const addTaskBtn = document.createElement('button');
     addTaskBtn.classList.add('add-task-btn');
-    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
-    addTaskBtn.onclick = () => openTaskModal(formatDateISO(day));
-    dayEl.appendChild(addTaskBtn);
+    addTaskBtn.innerHTML = '<i class="fas fa-plus-circle"></i>Добавить задачу';
+    addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
 
+    dayEl.appendChild(addTaskBtn);
     calendarEl.appendChild(dayEl);
   }
 }
 
-// Форматирование даты в ISO
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
+async function loadTasks() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const snapshot = await db.collection('tasks')
+      .where('userId', '==', user.uid)
+      .get();
+
+    snapshot.forEach(doc => {
+      const taskData = doc.data();
+      displayTask(taskData.date, taskData.text, taskData.done, doc.id);
+    });
+  } catch (error) {
+    console.error("Ошибка при загрузке задач:", error.message);
+  }
 }
 
-// Сохранение задач в Firestore
+function displayTask(date, text, done, taskId) {
+  const dayEl = document.querySelector(`.calendar-day[data-date="${date}"]`);
+  if (!dayEl) return;
+
+  const taskList = dayEl.querySelector('.tasks-list');
+  const taskItem = document.createElement('li');
+  taskItem.classList.add('task-item');
+  if (done) taskItem.classList.add('done');
+
+  taskItem.innerHTML = `
+    <span>${text}</span>
+    <button onclick="deleteTask('${taskId}')"><i class="fas fa-trash-alt"></i></button>
+  `;
+
+  taskList.appendChild(taskItem);
+}
+
+async function deleteTask(taskId) {
+  try {
+    await db.collection('tasks').doc(taskId).delete();
+    document.getElementById(taskId).remove();
+    console.log("Задача удалена:", taskId);
+  } catch (error) {
+    console.error("Ошибка при удалении задачи:", error.message);
+  }
+}
+
 addTaskButton.onclick = async () => {
   const taskText = taskInput.value.trim();
   if (taskText && selectedDate) {
@@ -140,12 +159,14 @@ addTaskButton.onclick = async () => {
         console.error("Пользователь не авторизован");
         return alert("Авторизуйтесь, чтобы добавлять задачи.");
       }
-      await db.collection('tasks').add({
+
+      const docRef = await db.collection('tasks').add({
         date: selectedDate,
         text: taskText,
         done: false,
         userId: user.uid,
       });
+      displayTask(selectedDate, taskText, false, docRef.id);
       console.log("Задача добавлена в Firestore:", { date: selectedDate, text: taskText });
       alert('Задача добавлена!');
       closeModal();
@@ -158,15 +179,19 @@ addTaskButton.onclick = async () => {
   }
 };
 
-// Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async (user) => {
     if (user) {
       console.log("Пользователь авторизован:", user.email);
       createCalendar();
+      await loadTasks();
     } else {
       console.log("Пользователь не авторизован, показываем окно авторизации.");
       authModal.classList.add('show');
     }
   });
 });
+
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
+}
