@@ -11,43 +11,26 @@ function isMobileDevice() {
   return window.innerWidth <= 768;
 }
 
-// Адаптация высоты при появлении клавиатуры
-function adjustForKeyboard() {
-  if (isMobileDevice()) {
-    const initialHeight = window.innerHeight;
-
-    // Обработчик для сдвига окна при появлении клавиатуры
-    function adjustForKeyboard() {
-      if (window.innerHeight < initialHeight) {
-        // Вычисляем сдвиг и применяем к модальному окну
-        taskModal.style.transform = `translateY(-${initialHeight - window.innerHeight}px)`;
-      }
-    }
-
-    // Восстановление положения при закрытии клавиатуры
-    function resetPosition() {
-      taskModal.style.transform = 'translateY(0)';
-    }
-
-    // Слушаем изменение размера окна
-    window.addEventListener('resize', adjustForKeyboard);
-    taskInput.addEventListener('blur', resetPosition); // при потере фокуса восстанавливаем положение
-  }
-}
-
-// Изменение способа открытия модального окна для iOS
+// Открытие модального окна
 function openModal(date) {
   selectedDate = date;
-  document.body.classList.add('modal-open');
+  document.body.classList.add('modal-open'); // Отключаем скролл страницы
   taskModal.classList.add('show');
   taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
 
-  // Включаем обработку сдвига окна для клавиатуры на мобильных устройствах
-  adjustForKeyboard();
-}
+  // Задержка перед прокруткой, чтобы клавиатура успела открыться
+  setTimeout(() => {
+    // Прокручиваем поле ввода в видимую область
+    taskInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+    // Дополнительные корректировки для мобильных устройств (сдвиг окна)
+    if (isMobileDevice()) {
+      taskModal.style.transform = `translateY(0)`;
+    }
+  }, 300); // Задержка 300мс для корректной работы с клавиатурой
+}
 
 // Закрытие модального окна
 function closeModal() {
