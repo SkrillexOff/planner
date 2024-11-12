@@ -20,26 +20,30 @@ function openModal(date) {
   taskInput.value = '';
   taskInput.focus();
 
-  // Исправление положения на iOS при появлении клавиатуры
+  // Исправление для iOS
   if (isMobileDevice()) {
-    const initialViewportHeight = window.innerHeight;
-    window.addEventListener('resize', adjustModalPosition);
-
-    function adjustModalPosition() {
-      if (window.innerHeight < initialViewportHeight) {
-        taskModal.classList.add('adjust-for-keyboard');
-      } else {
-        taskModal.classList.remove('adjust-for-keyboard');
-      }
-    }
+    taskInput.addEventListener('focus', adjustForKeyboard);
+    taskInput.addEventListener('blur', resetPosition);
   }
 }
 
 // Закрытие модального окна
 function closeModal() {
-  document.body.classList.remove('modal-open'); // Включаем скролл страницы
+  document.body.classList.remove('modal-open');
   taskModal.classList.remove('show');
   selectedDate = null;
+  taskInput.removeEventListener('focus', adjustForKeyboard);
+  taskInput.removeEventListener('blur', resetPosition);
+}
+
+// Перемещение модального окна при появлении клавиатуры на iOS
+function adjustForKeyboard() {
+  taskModal.style.bottom = "200px";
+}
+
+// Возврат модального окна в исходное положение
+function resetPosition() {
+  taskModal.style.bottom = "0";
 }
 
 // Обработчик для кнопки закрытия
