@@ -19,6 +19,20 @@ function openModal(date) {
   taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
+
+  // Исправление положения на iOS при появлении клавиатуры
+  if (isMobileDevice()) {
+    const initialViewportHeight = window.innerHeight;
+    window.addEventListener('resize', adjustModalPosition);
+
+    function adjustModalPosition() {
+      if (window.innerHeight < initialViewportHeight) {
+        taskModal.classList.add('adjust-for-keyboard');
+      } else {
+        taskModal.classList.remove('adjust-for-keyboard');
+      }
+    }
+  }
 }
 
 // Закрытие модального окна

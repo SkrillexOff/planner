@@ -112,8 +112,8 @@ h1 {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Затемнение фона */
-  animation: fade-in 0.25s ease; /* Анимация затемнения фона */
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fade-in 0.25s ease;
 }
 
 .modal.show {
@@ -133,12 +133,12 @@ h1 {
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transform: translateY(100%); /* Начальная позиция для анимации */
-  transition: transform 0.25s ease; /* Анимация для модального окна */
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
 }
 
 .modal.show .modal-content {
-  transform: translateY(0); /* Конечная позиция для анимации */
+  transform: translateY(0);
 }
 
 .close-btn {
