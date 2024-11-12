@@ -20,30 +20,32 @@ function openModal(date) {
   taskInput.value = '';
   taskInput.focus();
 
-  // Исправление для iOS
+  // Решение для iOS: адаптация высоты при появлении клавиатуры
   if (isMobileDevice()) {
-    taskInput.addEventListener('focus', adjustForKeyboard);
+    const initialHeight = window.innerHeight;
+
+    // Обработчик для сдвига окна при появлении клавиатуры
+    function adjustForKeyboard() {
+      if (window.innerHeight < initialHeight) {
+        taskModal.style.transform = `translateY(-${initialHeight - window.innerHeight}px)`;
+      }
+    }
+
+    // Восстановление положения при закрытии клавиатуры
+    function resetPosition() {
+      taskModal.style.transform = 'translateY(0)';
+    }
+
+    window.addEventListener('resize', adjustForKeyboard);
     taskInput.addEventListener('blur', resetPosition);
   }
 }
 
 // Закрытие модального окна
 function closeModal() {
-  document.body.classList.remove('modal-open');
+  document.body.classList.remove('modal-open'); // Включаем скролл страницы
   taskModal.classList.remove('show');
   selectedDate = null;
-  taskInput.removeEventListener('focus', adjustForKeyboard);
-  taskInput.removeEventListener('blur', resetPosition);
-}
-
-// Перемещение модального окна при появлении клавиатуры на iOS
-function adjustForKeyboard() {
-  taskModal.style.bottom = "200px";
-}
-
-// Возврат модального окна в исходное положение
-function resetPosition() {
-  taskModal.style.bottom = "0";
 }
 
 // Обработчик для кнопки закрытия

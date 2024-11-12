@@ -9,7 +9,7 @@ body {
 }
 
 body.modal-open {
-  overflow: hidden; /* Убираем скролл страницы при открытом модальном окне */
+  overflow: hidden;
 }
 
 h1 {
@@ -103,7 +103,6 @@ h1 {
   font-size: 1.2em;
 }
 
-/* Модальное окно */
 .modal {
   display: none;
   position: fixed;
@@ -135,7 +134,7 @@ h1 {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transform: translateY(100%);
   transition: transform 0.25s ease;
-  position: fixed; /* Фиксированное позиционирование для предотвращения перекрытия */
+  position: fixed;
 }
 
 .modal.show .modal-content {
@@ -176,7 +175,6 @@ h1 {
   font-size: 14px;
 }
 
-/* Анимация для фона */
 @keyframes fade-in {
   from {
     background-color: rgba(0, 0, 0, 0);
