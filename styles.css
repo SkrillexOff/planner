@@ -22,8 +22,7 @@ h1 {
 }
 
 .calendar-day {
-  padding-left: 8px;
-  padding-right: 8px;
+  padding: 8px;
   border-radius: 8px;
 }
 
@@ -32,7 +31,6 @@ h1 {
   flex-direction: column;
   align-items: baseline;
   padding-left: 16px;
-  gap: 2px;
 }
 
 .day-date {
@@ -50,13 +48,11 @@ h1 {
   list-style-type: none;
   padding: 0;
   margin-top: 16px;
-  margin-bottom: 4px;
 }
 
 .task-item {
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 16px;
   background: #FFFFFF;
   border-radius: 16px;
@@ -89,7 +85,6 @@ h1 {
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: left;
 }
 
 .add-task-btn i {
@@ -97,6 +92,7 @@ h1 {
   font-size: 1.2em;
 }
 
+/* Модальное окно */
 .modal {
   display: none;
   position: fixed;
@@ -110,7 +106,7 @@ h1 {
 
 .modal.show {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
 }
 

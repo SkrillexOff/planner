@@ -3,13 +3,13 @@ const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
   authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
   projectId: "taskcalendarapp-bf3b3",
-  storageBucket: "taskcalendarapp-bf3b3.appspot.com",
+  storageBucket: "taskcalendarapp-bf3b3.firebasestorage.app",
   messagingSenderId: "482463811896",
   appId: "1:482463811896:web:11700779551db85f8c59cd",
   measurementId: "G-4V1NYWDVKF"
 };
 
-// Инициализация Firebase
+// Инициализация Firebase 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -68,7 +68,6 @@ loginButton.onclick = async () => {
 
 function createCalendar() {
   const today = new Date();
-
   for (let i = 0; i < 30; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
@@ -79,17 +78,26 @@ function createCalendar() {
 
     const dayHeader = document.createElement('div');
     dayHeader.classList.add('day-header');
-    dayHeader.innerHTML = `<div class="day-date">${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}</div>
-      <div class="day-weekday">${day.toLocaleString('ru-RU', { weekday: 'long' })}</div>`;
+
+    const dayDate = document.createElement('div');
+    dayDate.classList.add('day-date');
+    dayDate.innerHTML = `${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}`;
+
+    const dayWeekday = document.createElement('div');
+    dayWeekday.classList.add('day-weekday');
+    dayWeekday.textContent = day.toLocaleString('ru-RU', { weekday: 'long' });
+
+    dayHeader.appendChild(dayDate);
+    dayHeader.appendChild(dayWeekday);
+    dayEl.appendChild(dayHeader);
 
     const taskList = document.createElement('ul');
     taskList.classList.add('tasks-list');
-    dayEl.appendChild(dayHeader);
     dayEl.appendChild(taskList);
 
     const addTaskBtn = document.createElement('button');
     addTaskBtn.classList.add('add-task-btn');
-    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
+    addTaskBtn.innerHTML = '<i class="fas fa-plus-circle"></i>Добавить задачу';
     addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
 
     dayEl.appendChild(addTaskBtn);
@@ -97,49 +105,21 @@ function createCalendar() {
   }
 }
 
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
-}
+async function loadTasks() {
+  const user = auth.currentUser;
+  if (!user) return;
 
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loadTasks(user.uid);
-  } else {
-    authModal.classList.add('show');
-  }
-});
-
-async function addTask(date, text) {
   try {
-    const user = auth.currentUser;
-    const taskRef = await db.collection('tasks').add({
-      date,
-      text,
-      done: false,
-      userId: user.uid
-    });
-    displayTask(date, text, false, taskRef.id);
-  } catch (error) {
-    alert(`Ошибка при добавлении задачи: ${error.message}`);
-  }
-}
+    const snapshot = await db.collection('tasks')
+      .where('userId', '==', user.uid)
+      .get();
 
-addTaskButton.onclick = () => {
-  if (taskInput.value.trim()) {
-    addTask(selectedDate, taskInput.value.trim());
-    closeModal();
-  }
-};
-
-async function loadTasks(userId) {
-  try {
-    const querySnapshot = await db.collection('tasks').where('userId', '==', userId).get();
-    querySnapshot.forEach((doc) => {
-      const { date, text, done } = doc.data();
-      displayTask(date, text, done, doc.id);
+    snapshot.forEach(doc => {
+      const taskData = doc.data();
+      displayTask(taskData.date, taskData.text, taskData.done, doc.id);
     });
   } catch (error) {
-    alert(`Ошибка при загрузке задач: ${error.message}`);
+    console.error("Ошибка при загрузке задач:", error.message);
   }
 }
 
@@ -150,7 +130,6 @@ function displayTask(date, text, done, taskId) {
   const taskList = dayEl.querySelector('.tasks-list');
   const taskItem = document.createElement('li');
   taskItem.classList.add('task-item');
-  taskItem.id = taskId;
   if (done) taskItem.classList.add('done');
 
   taskItem.innerHTML = `
@@ -164,11 +143,55 @@ function displayTask(date, text, done, taskId) {
 async function deleteTask(taskId) {
   try {
     await db.collection('tasks').doc(taskId).delete();
-    const taskItem = document.getElementById(taskId);
-    if (taskItem) taskItem.remove();
+    document.getElementById(taskId).remove();
+    console.log("Задача удалена:", taskId);
   } catch (error) {
-    alert(`Ошибка при удалении задачи: ${error.message}`);
+    console.error("Ошибка при удалении задачи:", error.message);
   }
 }
 
-createCalendar();
+addTaskButton.onclick = async () => {
+  const taskText = taskInput.value.trim();
+  if (taskText && selectedDate) {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("Пользователь не авторизован");
+        return alert("Авторизуйтесь, чтобы добавлять задачи.");
+      }
+
+      const docRef = await db.collection('tasks').add({
+        date: selectedDate,
+        text: taskText,
+        done: false,
+        userId: user.uid,
+      });
+      displayTask(selectedDate, taskText, false, docRef.id);
+      console.log("Задача добавлена в Firestore:", { date: selectedDate, text: taskText });
+      alert('Задача добавлена!');
+      closeModal();
+    } catch (error) {
+      console.error("Ошибка при добавлении задачи:", error.message);
+      alert(`Ошибка при добавлении задачи: ${error.message}`);
+    }
+  } else {
+    console.warn("Пустой текст задачи или не выбрана дата.");
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      console.log("Пользователь авторизован:", user.email);
+      createCalendar();
+      await loadTasks();
+    } else {
+      console.log("Пользователь не авторизован, показываем окно авторизации.");
+      authModal.classList.add('show');
+    }
+  });
+});
+
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
+}
