@@ -1,3 +1,6 @@
+const tg = window.Telegram.WebApp;
+tg.init();
+
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
@@ -6,46 +9,35 @@ const closeBtn = document.querySelector('.close-btn');
 
 let selectedDate = null;
 
-// Проверка типа устройства
-function isMobileDevice() {
-  return window.innerWidth <= 768;
-}
+// Инициализация Telegram WebApp
+const user = tg.initDataUnsafe;
+const userName = user?.user?.first_name || 'Гость';
+document.title = `Календарь задач - ${userName}`;
+
+tg.MainButton.setText('Закрыть');
+tg.MainButton.show();
+tg.MainButton.onClick(function() {
+  tg.close();
+});
 
 // Открытие модального окна
 function openModal(date) {
   selectedDate = date;
-  document.body.classList.add('modal-open'); // Отключаем скролл страницы
+  document.body.classList.add('modal-open');
   taskModal.classList.add('show');
-  taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
-
-  // Задержка перед прокруткой, чтобы клавиатура успела открыться
-  setTimeout(() => {
-    // Прокручиваем поле ввода в видимую область
-    taskInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Дополнительные корректировки для мобильных устройств (сдвиг окна)
-    if (isMobileDevice()) {
-      taskModal.style.transform = `translateY(0)`;
-    }
-  }, 300); // Задержка 300мс для корректной работы с клавиатурой
 }
 
 // Закрытие модального окна
 function closeModal() {
-  document.body.classList.remove('modal-open'); // Включаем скролл страницы
+  document.body.classList.remove('modal-open');
   taskModal.classList.remove('show');
   selectedDate = null;
 }
 
 // Обработчик для кнопки закрытия
 closeBtn.onclick = closeModal;
-
-// Закрытие модального окна при клике вне его области
-window.onclick = (event) => {
-  if (event.target === taskModal) closeModal();
-};
 
 // Добавление задачи
 addTaskButton.onclick = () => {
@@ -54,13 +46,11 @@ addTaskButton.onclick = () => {
     addTask(selectedDate, taskText);
     updateDayTasks(document.querySelector(`[data-date="${selectedDate}"]`), selectedDate);
     closeModal();
+
+    // Отправка задачи в Telegram
+    tg.sendData(`Задача для ${selectedDate}: ${taskText}`);
   }
 };
-
-// Форматирование даты в ISO
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
-}
 
 // Создание календаря
 function createCalendar() {
@@ -166,6 +156,11 @@ function deleteTask(date, taskText) {
   let tasks = JSON.parse(localStorage.getItem(date)) || [];
   tasks = tasks.filter(task => task.text !== taskText);
   localStorage.setItem(date, JSON.stringify(tasks));
+}
+
+// Форматирование даты в ISO
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
 }
 
 // Инициализация календаря
