@@ -1,57 +1,99 @@
-// script.js
+// Firebase конфигурация
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
+  authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
+  projectId: "taskcalendarapp-bf3b3",
+  storageBucket: "taskcalendarapp-bf3b3.firebasestorage.app",
+  messagingSenderId: "482463811896",
+  appId: "1:482463811896:web:11700779551db85f8c59cd",
+  measurementId: "G-4V1NYWDVKF"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+// Инициализация Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Проверка, инициализирован ли Firebase
+console.log("Firebase инициализирован:", firebase.apps.length > 0);
+
+// Сервисы Firebase
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
+const authModal = document.getElementById('authModal');
 const taskInput = document.getElementById('taskInput');
 const addTaskButton = document.getElementById('addTaskButton');
-const closeBtn = document.querySelector('.close-btn');
+const loginButton = document.getElementById('loginButton');
+const registerButton = document.getElementById('registerButton');
+const closeBtns = document.querySelectorAll('.close-btn');
 
 let selectedDate = null;
 
-// Проверка типа устройства
-function isMobileDevice() {
-  return window.innerWidth <= 768;
-}
-
-// Открытие модального окна
-function openModal(date) {
+// Открытие модального окна задач
+function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
-  taskModal.classList.toggle('desktop', !isMobileDevice());
   taskInput.value = '';
   taskInput.focus();
+  console.log("Модальное окно для добавления задачи открыто. Дата:", selectedDate);
 }
 
-// Закрытие модального окна
+// Закрытие модальных окон
 function closeModal() {
   taskModal.classList.remove('show');
-  selectedDate = null;
+  authModal.classList.remove('show');
 }
 
-// Обработчик для кнопки закрытия
-closeBtn.onclick = closeModal;
-
-// Закрытие модального окна при клике вне его области
+// Добавляем события для закрытия окон
+closeBtns.forEach(btn => btn.onclick = closeModal);
 window.onclick = (event) => {
-  if (event.target === taskModal) closeModal();
+  if (event.target === taskModal || event.target === authModal) closeModal();
 };
 
-// Добавление задачи
-addTaskButton.onclick = () => {
-  const taskText = taskInput.value.trim();
-  if (taskText && selectedDate) {
-    addTask(selectedDate, taskText);
-    updateDayTasks(document.querySelector(`[data-date="${selectedDate}"]`), selectedDate);
+// Функции регистрации и входа
+registerButton.onclick = async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+    console.log("Регистрация успешна для пользователя:", email);
+    alert('Регистрация успешна!');
     closeModal();
+  } catch (error) {
+    console.error("Ошибка регистрации:", error.message);
+    alert(`Ошибка регистрации: ${error.message}`);
   }
 };
 
-// Форматирование даты в ISO
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
-}
+loginButton.onclick = async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    console.log("Вход выполнен для пользователя:", email);
+    alert('Вход выполнен успешно!');
+    closeModal();
+  } catch (error) {
+    console.error("Ошибка входа:", error.message);
+    alert(`Ошибка входа: ${error.message}`);
+  }
+};
 
-// Создание календаря
+// Инициализация календаря
 function createCalendar() {
   const today = new Date();
 
@@ -86,76 +128,55 @@ function createCalendar() {
     const addTaskBtn = document.createElement('button');
     addTaskBtn.classList.add('add-task-btn');
     addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
-    addTaskBtn.onclick = () => openModal(formatDateISO(day));
+    addTaskBtn.onclick = () => openTaskModal(formatDateISO(day));
     dayEl.appendChild(addTaskBtn);
 
     calendarEl.appendChild(dayEl);
-
-    // Загружаем задачи для дня
-    updateDayTasks(dayEl, formatDateISO(day));
   }
 }
 
-// Добавление задачи в localStorage
-function addTask(date, taskText) {
-  const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  tasks.push({ text: taskText, done: false });
-  localStorage.setItem(date, JSON.stringify(tasks));
+// Форматирование даты в ISO
+function formatDateISO(date) {
+  return date.toISOString().split('T')[0];
 }
 
-// Обновление списка задач для дня
-function updateDayTasks(dayEl, date) {
-  const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  const taskList = dayEl.querySelector('.tasks-list');
-  taskList.innerHTML = '';
+// Сохранение задач в Firestore
+addTaskButton.onclick = async () => {
+  const taskText = taskInput.value.trim();
+  if (taskText && selectedDate) {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("Пользователь не авторизован");
+        return alert("Авторизуйтесь, чтобы добавлять задачи.");
+      }
+      await db.collection('tasks').add({
+        date: selectedDate,
+        text: taskText,
+        done: false,
+        userId: user.uid,
+      });
+      console.log("Задача добавлена в Firestore:", { date: selectedDate, text: taskText });
+      alert('Задача добавлена!');
+      closeModal();
+    } catch (error) {
+      console.error("Ошибка при добавлении задачи:", error.message);
+      alert(`Ошибка при добавлении задачи: ${error.message}`);
+    }
+  } else {
+    console.warn("Пустой текст задачи или не выбрана дата.");
+  }
+};
 
-  tasks.forEach(task => {
-    const taskEl = document.createElement('li');
-    taskEl.classList.add('task-item');
-    if (task.done) taskEl.classList.add('done');
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.classList.add('task-checkbox');
-    checkbox.checked = task.done;
-    checkbox.onchange = () => {
-      toggleTaskStatus(date, task.text);
-      updateDayTasks(dayEl, date);
-    };
-
-    const taskText = document.createElement('span');
-    taskText.textContent = task.text;
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-    deleteBtn.onclick = () => {
-      deleteTask(date, task.text);
-      updateDayTasks(dayEl, date);
-    };
-
-    taskEl.appendChild(checkbox);
-    taskEl.appendChild(taskText);
-    taskEl.appendChild(deleteBtn);
-    taskList.appendChild(taskEl);
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', () => {
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      console.log("Пользователь авторизован:", user.email);
+      createCalendar();
+    } else {
+      console.log("Пользователь не авторизован, показываем окно авторизации.");
+      authModal.classList.add('show');
+    }
   });
-}
-
-// Изменение статуса задачи
-function toggleTaskStatus(date, taskText) {
-  const tasks = JSON.parse(localStorage.getItem(date)) || [];
-  const taskIndex = tasks.findIndex(task => task.text === taskText);
-  if (taskIndex !== -1) {
-    tasks[taskIndex].done = !tasks[taskIndex].done;
-    localStorage.setItem(date, JSON.stringify(tasks));
-  }
-}
-
-// Удаление задачи
-function deleteTask(date, taskText) {
-  let tasks = JSON.parse(localStorage.getItem(date)) || [];
-  tasks = tasks.filter(task => task.text !== taskText);
-  localStorage.setItem(date, JSON.stringify(tasks));
-}
-
-// Инициализация календаря
-document.addEventListener('DOMContentLoaded', createCalendar);
+});
