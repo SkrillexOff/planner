@@ -1,4 +1,4 @@
-// Инициализация Firebase в auth.js
+// Инициализация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
     authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
@@ -9,39 +9,45 @@ const firebaseConfig = {
     measurementId: "G-4V1NYWDVKF"
   };
   
-  // Инициализация Firebase приложения
+  // Инициализация Firebase
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   } else {
-    firebase.app(); // если Firebase уже инициализирован, используем существующее приложение
+    firebase.app(); // если Firebase уже инициализирован
   }
   
-  const auth = firebase.auth();
-  
-  const loginButton = document.getElementById('loginButton');
-  const registerButton = document.getElementById('registerButton');
-  
-  registerButton.onclick = async () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    try {
-      await auth.createUserWithEmailAndPassword(email, password);
-      alert('Регистрация успешна!');
-      window.location.href = "index.html"; // Переход на главную страницу после регистрации
-    } catch (error) {
-      alert(`Ошибка регистрации: ${error.message}`);
-    }
-  };
-  
-  loginButton.onclick = async () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-      alert('Вход выполнен успешно!');
-      window.location.href = "index.html"; // Переход на главную страницу после входа
-    } catch (error) {
-      alert(`Ошибка входа: ${error.message}`);
-    }
-  };
-  
+
+const auth = firebase.auth();
+
+const loginButton = document.getElementById('loginButton');
+const registerButton = document.getElementById('registerButton');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+
+loginButton.onclick = () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if (email && password) {
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        alert(`Ошибка входа: ${error.message}`);
+      });
+  }
+};
+
+registerButton.onclick = () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if (email && password) {
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        alert(`Ошибка регистрации: ${error.message}`);
+      });
+  }
+};
