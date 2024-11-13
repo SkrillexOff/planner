@@ -201,12 +201,18 @@ function openEditTaskModal(taskId, currentTaskText) {
   editTaskInput.focus();
 }
 
-// Закрытие модального окна
-closeBtns.forEach(btn => btn.onclick = () => editTaskModal.classList.remove('show'));
+// Закрытие модальных окон
+closeBtns.forEach(btn => {
+  btn.onclick = () => {
+    if (btn.closest('#taskModal')) taskModal.classList.remove('show');
+    if (btn.closest('#editTaskModal')) editTaskModal.classList.remove('show');
+  };
+});
+
+// Закрытие модальных окон при клике вне их
 window.onclick = (event) => {
-  if (event.target === editTaskModal) {
-    editTaskModal.classList.remove('show');
-  }
+  if (event.target === taskModal) taskModal.classList.remove('show');
+  if (event.target === editTaskModal) editTaskModal.classList.remove('show');
 };
 
 // Обработчик кнопки "Сохранить"
