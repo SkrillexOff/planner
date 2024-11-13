@@ -159,13 +159,8 @@ function subscribeToTasks(date, tasksListEl) {
         taskTextEl.textContent = taskData.task;
         taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task);
 
-        const deleteButton = document.createElement('button');
-        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
-        deleteButton.onclick = () => deleteTask(doc.id, tasksListEl);
-
         taskItemEl.appendChild(checkboxEl);
         taskItemEl.appendChild(taskTextEl);
-        taskItemEl.appendChild(deleteButton);
         tasksListEl.appendChild(taskItemEl);
       });
     });
@@ -283,7 +278,7 @@ async function loadTasks(date, tasksListEl) {
 
     const taskTextEl = document.createElement('span');
     taskTextEl.textContent = taskData.task;
-    taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task); // Открыть модальное окно для редактирования задачи
+    taskItemEl.onclick = () => openEditTaskModal(doc.id, taskData.task); // Теперь открывается при клике на всю задачу
 
     const deleteButton = document.createElement('button');
     deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
