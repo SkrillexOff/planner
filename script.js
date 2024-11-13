@@ -25,6 +25,7 @@ const closeBtns = document.querySelectorAll('.close-btn');
 
 let selectedDate = null;
 
+// Открытие модального окна для задачи
 function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
@@ -32,6 +33,7 @@ function openTaskModal(date) {
   taskInput.focus();
 }
 
+// Закрытие модального окна
 function closeModal() {
   taskModal.classList.remove('show');
   authModal.classList.remove('show');
@@ -42,6 +44,7 @@ window.onclick = (event) => {
   if (event.target === taskModal || event.target === authModal) closeModal();
 };
 
+// Регистрация пользователя
 registerButton.onclick = async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -54,6 +57,7 @@ registerButton.onclick = async () => {
   }
 };
 
+// Вход пользователя
 loginButton.onclick = async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -66,6 +70,7 @@ loginButton.onclick = async () => {
   }
 };
 
+// Создание календаря
 function createCalendar() {
   const today = new Date();
 
@@ -74,101 +79,107 @@ function createCalendar() {
     day.setDate(today.getDate() + i);
 
     const dayEl = document.createElement('div');
-    dayEl.classList.add('calendar-day');
+    dayEl.className = 'calendar-day';
     dayEl.dataset.date = formatDateISO(day);
 
     const dayHeader = document.createElement('div');
-    dayHeader.classList.add('day-header');
+    dayHeader.className = 'day-header';
     dayHeader.innerHTML = `<div class="day-date">${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}</div>
       <div class="day-weekday">${day.toLocaleString('ru-RU', { weekday: 'long' })}</div>`;
 
     const taskList = document.createElement('ul');
-    taskList.classList.add('tasks-list');
+    taskList.className = 'tasks-list';
     dayEl.appendChild(dayHeader);
     dayEl.appendChild(taskList);
 
     const addTaskBtn = document.createElement('button');
-    addTaskBtn.classList.add('add-task-btn');
+    addTaskBtn.className = 'add-task-btn';
     addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
     addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
 
     dayEl.appendChild(addTaskBtn);
     calendarEl.appendChild(dayEl);
+
+    loadTasks(dayEl.dataset.date, taskList);
   }
 }
 
+// Формат даты в ISO
 function formatDateISO(date) {
   return date.toISOString().split('T')[0];
 }
 
-auth.onAuthStateChanged(user => {
+// Добавление задачи
+addTaskButton.onclick = async () => {
+  const task = taskInput.value.trim();
+  if (task === '') return;
+
+  const taskData = {
+    task,
+    date: selectedDate,
+    completed: false
+  };
+
+  await db.collection('tasks').add(taskData);
+
+  // Найти элемент tasksList для обновлённого дня
+  const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
+  closeModal();
+
+  // Загрузить задачи снова, чтобы показать новую задачу
+  loadTasks(selectedDate, tasksListEl);
+};
+
+// Загрузка задач для выбранной даты
+async function loadTasks(date, tasksListEl) {
+  tasksListEl.innerHTML = '';
+
+  const snapshot = await db.collection('tasks').where('date', '==', date).get();
+  snapshot.forEach((doc) => {
+    const taskData = doc.data();
+    const taskItemEl = document.createElement('li');
+    taskItemEl.className = 'task-item';
+    if (taskData.completed) taskItemEl.classList.add('done');
+
+    const checkboxEl = document.createElement('input');
+    checkboxEl.type = 'checkbox';
+    checkboxEl.checked = taskData.completed;
+    checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
+
+    const taskTextEl = document.createElement('span');
+    taskTextEl.textContent = taskData.task;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    deleteButton.onclick = () => deleteTask(doc.id, tasksListEl);
+
+    taskItemEl.appendChild(checkboxEl);
+    taskItemEl.appendChild(taskTextEl);
+    taskItemEl.appendChild(deleteButton);
+    tasksListEl.appendChild(taskItemEl);
+  });
+}
+
+// Переключение состояния выполнения задачи
+async function toggleTaskCompletion(taskId, completed, taskItemEl) {
+  await db.collection('tasks').doc(taskId).update({ completed });
+  taskItemEl.classList.toggle('done', completed);
+}
+
+// Удаление задачи
+async function deleteTask(taskId, tasksListEl) {
+  await db.collection('tasks').doc(taskId).delete();
+  loadTasks(tasksListEl.parentNode.querySelector('.day-date').textContent, tasksListEl);
+}
+
+// Состояние аутентификации
+auth.onAuthStateChanged((user) => {
   if (user) {
-    loadTasks(user.uid);
+    createCalendar();
   } else {
     authModal.classList.add('show');
   }
 });
 
-async function addTask(date, text) {
-  try {
-    const user = auth.currentUser;
-    const taskRef = await db.collection('tasks').add({
-      date,
-      text,
-      done: false,
-      userId: user.uid
-    });
-    displayTask(date, text, false, taskRef.id);
-  } catch (error) {
-    alert(`Ошибка при добавлении задачи: ${error.message}`);
-  }
-}
-
-addTaskButton.onclick = () => {
-  if (taskInput.value.trim()) {
-    addTask(selectedDate, taskInput.value.trim());
-    closeModal();
-  }
-};
-
-async function loadTasks(userId) {
-  try {
-    const querySnapshot = await db.collection('tasks').where('userId', '==', userId).get();
-    querySnapshot.forEach((doc) => {
-      const { date, text, done } = doc.data();
-      displayTask(date, text, done, doc.id);
-    });
-  } catch (error) {
-    alert(`Ошибка при загрузке задач: ${error.message}`);
-  }
-}
-
-function displayTask(date, text, done, taskId) {
-  const dayEl = document.querySelector(`.calendar-day[data-date="${date}"]`);
-  if (!dayEl) return;
-
-  const taskList = dayEl.querySelector('.tasks-list');
-  const taskItem = document.createElement('li');
-  taskItem.classList.add('task-item');
-  taskItem.id = taskId;
-  if (done) taskItem.classList.add('done');
-
-  taskItem.innerHTML = `
-    <span>${text}</span>
-    <button onclick="deleteTask('${taskId}')"><i class="fas fa-trash-alt"></i></button>
-  `;
-
-  taskList.appendChild(taskItem);
-}
-
-async function deleteTask(taskId) {
-  try {
-    await db.collection('tasks').doc(taskId).delete();
-    const taskItem = document.getElementById(taskId);
-    if (taskItem) taskItem.remove();
-  } catch (error) {
-    alert(`Ошибка при удалении задачи: ${error.message}`);
-  }
-}
-
+// Инициализация календаря
 createCalendar();
