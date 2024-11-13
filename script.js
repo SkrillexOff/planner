@@ -59,27 +59,19 @@ auth.onAuthStateChanged(user => {
 
 function createCalendar() {
   const today = new Date();
-  const displayedDates = new Set();  // Множество для отслеживания отображённых дат
+  const displayedDates = new Set();
 
-  // Убедимся, что дни календаря добавляются только один раз
   for (let i = 0; i < 30; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
 
-    const dayStr = formatDateISO(day);  // Форматируем дату как строку (например, "2024-11-13")
-    
-    if (displayedDates.has(dayStr)) {
-      continue;  // Если дата уже была отображена, пропускаем её
-    }
-    
-    // Добавляем дату в множество
+    const dayStr = formatDateISO(day);
+
+    if (displayedDates.has(dayStr)) continue;
     displayedDates.add(dayStr);
 
-    // Проверяем, существует ли уже элемент для этого дня в DOM
     const existingDayElement = document.querySelector(`[data-date="${dayStr}"]`);
-    if (existingDayElement) {
-      continue;  // Если элемент уже существует, пропускаем его
-    }
+    if (existingDayElement) continue;
 
     const dayEl = document.createElement('div');
     dayEl.classList.add('calendar-day');
@@ -103,10 +95,11 @@ function createCalendar() {
     dayEl.appendChild(addTaskBtn);
     calendarEl.appendChild(dayEl);
 
-    // Загружаем задачи только для этого дня
-    loadTasks(dayStr, taskList);
+    // Подписываемся на обновления задач для этой даты
+    subscribeToTasks(dayStr, taskList);
   }
 }
+
 
 
 
@@ -139,44 +132,45 @@ addTaskButton.onclick = async () => {
   loadTasks(selectedDate, tasksListEl);  // Перезагружаем задачи для выбранного дня
 };
 
-// Загрузка задач для выбранной даты
-async function loadTasks(date, tasksListEl) {
-  tasksListEl.innerHTML = '';  // Очищаем список задач перед загрузкой новых
+// Подписываемся на обновления задач для конкретного пользователя и даты
+function subscribeToTasks(date, tasksListEl) {
+  const userId = auth.currentUser.uid;
 
-  const userId = auth.currentUser.uid;  // Получаем идентификатор текущего пользователя
-
-  // Получаем задачи из Firestore для конкретной даты и пользователя
-  const snapshot = await db.collection('tasks')
+  // Подписка на задачи через onSnapshot
+  db.collection('tasks')
     .where('date', '==', date)
     .where('userId', '==', userId)
-    .get();
+    .onSnapshot((snapshot) => {
+      tasksListEl.innerHTML = ''; // Очищаем список перед обновлением
 
-  snapshot.forEach((doc) => {
-    const taskData = doc.data();
-    const taskItemEl = document.createElement('li');
-    taskItemEl.className = 'task-item';
-    taskItemEl.setAttribute('data-task-id', doc.id);
-    if (taskData.completed) taskItemEl.classList.add('done');
+      snapshot.forEach((doc) => {
+        const taskData = doc.data();
+        const taskItemEl = document.createElement('li');
+        taskItemEl.className = 'task-item';
+        taskItemEl.setAttribute('data-task-id', doc.id);
+        if (taskData.completed) taskItemEl.classList.add('done');
 
-    const checkboxEl = document.createElement('input');
-    checkboxEl.type = 'checkbox';
-    checkboxEl.checked = taskData.completed;
-    checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
+        const checkboxEl = document.createElement('input');
+        checkboxEl.type = 'checkbox';
+        checkboxEl.checked = taskData.completed;
+        checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
 
-    const taskTextEl = document.createElement('span');
-    taskTextEl.textContent = taskData.task;
-    taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task);  // Открыть модальное окно для редактирования задачи
+        const taskTextEl = document.createElement('span');
+        taskTextEl.textContent = taskData.task;
+        taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task);
 
-    const deleteButton = document.createElement('button');
-    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
-    deleteButton.onclick = () => deleteTask(doc.id, tasksListEl);
+        const deleteButton = document.createElement('button');
+        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteButton.onclick = () => deleteTask(doc.id, tasksListEl);
 
-    taskItemEl.appendChild(checkboxEl);
-    taskItemEl.appendChild(taskTextEl);
-    taskItemEl.appendChild(deleteButton);
-    tasksListEl.appendChild(taskItemEl);
-  });
+        taskItemEl.appendChild(checkboxEl);
+        taskItemEl.appendChild(taskTextEl);
+        taskItemEl.appendChild(deleteButton);
+        tasksListEl.appendChild(taskItemEl);
+      });
+    });
 }
+
 
 
 
