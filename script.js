@@ -58,6 +58,7 @@ auth.onAuthStateChanged(user => {
 });
 
 function createCalendar() {
+  calendarEl.innerHTML = '';  // Очистка календаря перед его перерисовкой
   const today = new Date();
 
   for (let i = 0; i < 30; i++) {
