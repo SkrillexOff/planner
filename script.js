@@ -58,7 +58,6 @@ auth.onAuthStateChanged(user => {
 });
 
 function createCalendar() {
-  calendarEl.innerHTML = '';  // Очистка календаря перед его перерисовкой
   const today = new Date();
 
   for (let i = 0; i < 30; i++) {
@@ -168,21 +167,109 @@ async function toggleTaskCompletion(taskId, completed, taskItemEl) {
   }
 }
 
-// Удаление задачи
-async function deleteTask(taskId, tasksListEl) {
-  const userId = auth.currentUser.uid; // Получаем идентификатор текущего пользователя
+// Ссылки на элементы модального окна редактирования задачи
+const editTaskModal = document.getElementById('editTaskModal');
+const editTaskInput = document.getElementById('editTaskInput');
+const saveTaskButton = document.getElementById('saveTaskButton');
+const deleteTaskButton = document.getElementById('deleteTaskButton');
 
-  const taskRef = db.collection('tasks').doc(taskId);
-  const taskDoc = await taskRef.get();
+let selectedTaskId = null; // ID выбранной задачи для редактирования
 
-  if (taskDoc.exists && taskDoc.data().userId === userId) {
-    await taskRef.delete();
-    // Находим и удаляем задачу из списка на странице
-    const taskItemEl = tasksListEl.querySelector(`[data-task-id="${taskId}"]`);
-    if (taskItemEl) {
-      taskItemEl.remove();
+// Функция для открытия модального окна редактирования задачи
+function openEditTaskModal(taskId, currentTaskText) {
+  selectedTaskId = taskId; // Запоминаем ID задачи
+  editTaskModal.classList.add('show');
+  editTaskInput.value = currentTaskText; // Заполняем модальное окно текущим текстом задачи
+  editTaskInput.focus();
+}
+
+// Закрытие модального окна
+closeBtns.forEach(btn => btn.onclick = () => editTaskModal.classList.remove('show'));
+window.onclick = (event) => {
+  if (event.target === editTaskModal) {
+    editTaskModal.classList.remove('show');
+  }
+};
+
+// Обработчик кнопки "Сохранить"
+saveTaskButton.onclick = async () => {
+  const newTaskText = editTaskInput.value.trim();
+  if (newTaskText === '') return;
+
+  try {
+    // Обновление задачи в базе данных
+    await db.collection('tasks').doc(selectedTaskId).update({
+      task: newTaskText
+    });
+
+    // Закрыть модальное окно
+    editTaskModal.classList.remove('show');
+
+    // Перезагрузить задачи для этого дня
+    const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
+    loadTasks(selectedDate, tasksListEl);
+
+  } catch (error) {
+    alert(`Ошибка при сохранении задачи: ${error.message}`);
+  }
+};
+
+// Обработчик кнопки "Удалить"
+deleteTaskButton.onclick = async () => {
+  if (selectedTaskId) {
+    try {
+      // Удаление задачи из базы данных
+      await db.collection('tasks').doc(selectedTaskId).delete();
+
+      // Закрыть модальное окно
+      editTaskModal.classList.remove('show');
+
+      // Перезагрузить задачи для этого дня
+      const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
+      loadTasks(selectedDate, tasksListEl);
+
+    } catch (error) {
+      alert(`Ошибка при удалении задачи: ${error.message}`);
     }
   }
+};
+
+// Загрузка задач с кнопками для редактирования и удаления
+async function loadTasks(date, tasksListEl) {
+  tasksListEl.innerHTML = '';
+
+  const userId = auth.currentUser.uid;
+
+  const snapshot = await db.collection('tasks')
+    .where('date', '==', date)
+    .where('userId', '==', userId)
+    .get();
+
+  snapshot.forEach((doc) => {
+    const taskData = doc.data();
+    const taskItemEl = document.createElement('li');
+    taskItemEl.className = 'task-item';
+    taskItemEl.setAttribute('data-task-id', doc.id);
+    if (taskData.completed) taskItemEl.classList.add('done');
+
+    const checkboxEl = document.createElement('input');
+    checkboxEl.type = 'checkbox';
+    checkboxEl.checked = taskData.completed;
+    checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
+
+    const taskTextEl = document.createElement('span');
+    taskTextEl.textContent = taskData.task;
+    taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task); // Открыть модальное окно для редактирования задачи
+
+    const deleteButton = document.createElement('button');
+    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    deleteButton.onclick = () => deleteTask(doc.id, tasksListEl);
+
+    taskItemEl.appendChild(checkboxEl);
+    taskItemEl.appendChild(taskTextEl);
+    taskItemEl.appendChild(deleteButton);
+    tasksListEl.appendChild(taskItemEl);
+  });
 }
 
 auth.onAuthStateChanged(user => {
