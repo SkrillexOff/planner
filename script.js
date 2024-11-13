@@ -59,14 +59,31 @@ auth.onAuthStateChanged(user => {
 
 function createCalendar() {
   const today = new Date();
+  const displayedDates = new Set();  // Множество для отслеживания отображённых дат
 
+  // Убедимся, что дни календаря добавляются только один раз
   for (let i = 0; i < 30; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
 
+    const dayStr = formatDateISO(day);  // Форматируем дату как строку (например, "2024-11-13")
+    
+    if (displayedDates.has(dayStr)) {
+      continue;  // Если дата уже была отображена, пропускаем её
+    }
+    
+    // Добавляем дату в множество
+    displayedDates.add(dayStr);
+
+    // Проверяем, существует ли уже элемент для этого дня в DOM
+    const existingDayElement = document.querySelector(`[data-date="${dayStr}"]`);
+    if (existingDayElement) {
+      continue;  // Если элемент уже существует, пропускаем его
+    }
+
     const dayEl = document.createElement('div');
     dayEl.classList.add('calendar-day');
-    dayEl.dataset.date = formatDateISO(day);
+    dayEl.dataset.date = dayStr;
 
     const dayHeader = document.createElement('div');
     dayHeader.classList.add('day-header');
@@ -86,9 +103,12 @@ function createCalendar() {
     dayEl.appendChild(addTaskBtn);
     calendarEl.appendChild(dayEl);
 
-    loadTasks(dayEl.dataset.date, taskList);
+    // Загружаем задачи только для этого дня
+    loadTasks(dayStr, taskList);
   }
 }
+
+
 
 // Формат даты в ISO
 function formatDateISO(date) {
@@ -100,7 +120,7 @@ addTaskButton.onclick = async () => {
   const task = taskInput.value.trim();
   if (task === '') return;
 
-  const userId = auth.currentUser.uid; // Получаем идентификатор текущего пользователя
+  const userId = auth.currentUser.uid;  // Получаем идентификатор текущего пользователя
 
   const taskData = {
     task,
@@ -109,32 +129,33 @@ addTaskButton.onclick = async () => {
     userId // Добавляем userId
   };
 
+  // Добавляем задачу в Firestore
   await db.collection('tasks').add(taskData);
 
-  // Найти элемент tasksList для обновлённого дня
+  // Обновляем только задачи для текущей выбранной даты
   const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
   closeModal();
 
-  // Загрузить задачи снова, чтобы показать новую задачу
-  loadTasks(selectedDate, tasksListEl);
+  loadTasks(selectedDate, tasksListEl);  // Перезагружаем задачи для выбранного дня
 };
 
 // Загрузка задач для выбранной даты
 async function loadTasks(date, tasksListEl) {
-  tasksListEl.innerHTML = '';
+  tasksListEl.innerHTML = '';  // Очищаем список задач перед загрузкой новых
 
-  const userId = auth.currentUser.uid; // Получаем идентификатор текущего пользователя
+  const userId = auth.currentUser.uid;  // Получаем идентификатор текущего пользователя
 
+  // Получаем задачи из Firestore для конкретной даты и пользователя
   const snapshot = await db.collection('tasks')
     .where('date', '==', date)
-    .where('userId', '==', userId) // Фильтруем задачи по userId
+    .where('userId', '==', userId)
     .get();
 
   snapshot.forEach((doc) => {
     const taskData = doc.data();
     const taskItemEl = document.createElement('li');
     taskItemEl.className = 'task-item';
-    taskItemEl.setAttribute('data-task-id', doc.id);  // Добавляем ID задачи в атрибут
+    taskItemEl.setAttribute('data-task-id', doc.id);
     if (taskData.completed) taskItemEl.classList.add('done');
 
     const checkboxEl = document.createElement('input');
@@ -144,6 +165,7 @@ async function loadTasks(date, tasksListEl) {
 
     const taskTextEl = document.createElement('span');
     taskTextEl.textContent = taskData.task;
+    taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task);  // Открыть модальное окно для редактирования задачи
 
     const deleteButton = document.createElement('button');
     deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
@@ -155,6 +177,8 @@ async function loadTasks(date, tasksListEl) {
     tasksListEl.appendChild(taskItemEl);
   });
 }
+
+
 
 
 // Завершение задачи
