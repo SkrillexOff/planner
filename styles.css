@@ -101,7 +101,15 @@ body {
 
 h1 {
   color: #333;
-  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 24px;
+}
+
+h2 {
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 #calendar {
@@ -223,18 +231,23 @@ h1 {
   cursor: pointer;
 }
 
+.modal-2buttons {
+  display: flex;
+  flex-direction: row;
+}
+
 .close-btn:hover {
   color: #000;
 }
 
-#taskInput, #email, #password {
+#taskInput, #email, #password, #editTaskInput {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
   font-size: 16px;
 }
 
-#addTaskButton, #loginButton, #registerButton {
+#addTaskButton, #loginButton, #registerButton, #saveTaskButton {
   background-color: #000000;
   color: #ffffff;
   padding: 12px;
@@ -243,7 +256,18 @@ h1 {
   border: none;
   cursor: pointer;
   margin-top: 10px;
-  font-size: 14px;
+}
+
+#saveTaskButton {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 4px;
 }
 
 .auth-container {
@@ -302,6 +326,7 @@ h1 {
 }
 
 /* Добавим стили для кнопки выхода */
+
 #logoutButton {
   background-color: #d9534f;
   color: #ffffff;
@@ -309,9 +334,26 @@ h1 {
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 10px;
 }
+
 #logoutButton:hover {
+  background-color: #c9302c;
+}
+
+#deleteTaskButton {
+  background-color: #d9534f;
+  color: #ffffff;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-left: 4px;
+}
+
+#deleteTaskButton:hover {
   background-color: #c9302c;
 }
 
