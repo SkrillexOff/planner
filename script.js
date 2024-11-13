@@ -9,6 +9,7 @@ const firebaseConfig = {
   measurementId: "G-4V1NYWDVKF"
 };
 
+
 // Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -16,16 +17,12 @@ const db = firebase.firestore();
 
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
-const authModal = document.getElementById('authModal');
 const taskInput = document.getElementById('taskInput');
 const addTaskButton = document.getElementById('addTaskButton');
-const loginButton = document.getElementById('loginButton');
-const registerButton = document.getElementById('registerButton');
 const closeBtns = document.querySelectorAll('.close-btn');
 
 let selectedDate = null;
 
-// Открытие модального окна для задачи
 function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
@@ -33,42 +30,56 @@ function openTaskModal(date) {
   taskInput.focus();
 }
 
-// Закрытие модального окна
 function closeModal() {
   taskModal.classList.remove('show');
-  authModal.classList.remove('show');
 }
 
 closeBtns.forEach(btn => btn.onclick = closeModal);
 window.onclick = (event) => {
-  if (event.target === taskModal || event.target === authModal) closeModal();
+  if (event.target === taskModal) closeModal();
 };
 
-// Регистрация пользователя
-registerButton.onclick = async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  try {
-    await auth.createUserWithEmailAndPassword(email, password);
-    alert('Регистрация успешна!');
-    closeModal();
-  } catch (error) {
-    alert(`Ошибка регистрации: ${error.message}`);
+auth.onAuthStateChanged(user => {
+  if (user) {
+    createCalendar();
+  } else {
+    window.location.href = "login.html";
   }
-};
+});
 
-// Вход пользователя
-loginButton.onclick = async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    alert('Вход выполнен успешно!');
-    closeModal();
-  } catch (error) {
-    alert(`Ошибка входа: ${error.message}`);
+function createCalendar() {
+  const today = new Date();
+
+  for (let i = 0; i < 30; i++) {
+    const day = new Date(today);
+    day.setDate(today.getDate() + i);
+
+    const dayEl = document.createElement('div');
+    dayEl.classList.add('calendar-day');
+    dayEl.dataset.date = formatDateISO(day);
+
+    const dayHeader = document.createElement('div');
+    dayHeader.classList.add('day-header');
+    dayHeader.innerHTML = `<div class="day-date">${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}</div>
+      <div class="day-weekday">${day.toLocaleString('ru-RU', { weekday: 'long' })}</div>`;
+
+    const taskList = document.createElement('ul');
+    taskList.classList.add('tasks-list');
+    dayEl.appendChild(dayHeader);
+    dayEl.appendChild(taskList);
+
+    const addTaskBtn = document.createElement('button');
+    addTaskBtn.classList.add('add-task-btn');
+    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
+    addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
+
+    dayEl.appendChild(addTaskBtn);
+    calendarEl.appendChild(dayEl);
   }
-};
+}
+
+// Добавление и отображение задач остаётся аналогичным
+
 
 // Создание календаря
 function createCalendar() {
