@@ -134,6 +134,7 @@ async function loadTasks(date, tasksListEl) {
     const taskData = doc.data();
     const taskItemEl = document.createElement('li');
     taskItemEl.className = 'task-item';
+    taskItemEl.setAttribute('data-task-id', doc.id);  // Добавляем ID задачи в атрибут
     if (taskData.completed) taskItemEl.classList.add('done');
 
     const checkboxEl = document.createElement('input');
@@ -175,6 +176,11 @@ async function deleteTask(taskId, tasksListEl) {
 
   if (taskDoc.exists && taskDoc.data().userId === userId) {
     await taskRef.delete();
-    loadTasks(tasksListEl.parentNode.querySelector('.day-date').textContent, tasksListEl);
+    // Находим и удаляем задачу из списка на странице
+    const taskItemEl = tasksListEl.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskItemEl) {
+      taskItemEl.remove();
+    }
   }
 }
+
