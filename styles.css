@@ -18,7 +18,7 @@ h1 {
   gap: 32px;
   width: 100%;
   max-width: 400px;
-  padding-top: 24px;
+  padding-top: 32px;
 }
 
 .calendar-day {
@@ -217,8 +217,22 @@ h1 {
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 8px;
 }
 #logoutButton:hover {
   background-color: #c9302c;
+}
+
+/* Стили для блока с почтой пользователя */
+#userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+#userEmail {
+  font-size: 1.1em;
+  color: #333;
 }

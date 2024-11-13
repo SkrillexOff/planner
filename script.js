@@ -184,3 +184,15 @@ async function deleteTask(taskId, tasksListEl) {
   }
 }
 
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Отображаем почту пользователя
+    const userEmailElement = document.getElementById('userEmail');
+    userEmailElement.textContent = user.email;  // Устанавливаем email
+
+    // Создаём календарь
+    createCalendar();
+  } else {
+    window.location.href = "login.html";
+  }
+});
