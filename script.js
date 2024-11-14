@@ -51,8 +51,11 @@ logoutButton.onclick = async () => {
 
 auth.onAuthStateChanged(user => {
   if (user) {
-    createCalendar();
+    // Пользователь авторизован, показываем его email
+    document.getElementById('userEmail').textContent = user.email;
+    createCalendar();  // Инициализация календаря
   } else {
+    // Если пользователь не авторизован, редирект на страницу входа
     window.location.href = "login.html";
   }
 });
