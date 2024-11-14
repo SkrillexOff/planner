@@ -203,6 +203,15 @@ span {
   font-size: 1.2em;
 }
 
+.checkbox-item {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border-radius: 8px;
+  border: 1px solid #000000;
+  transition: 500ms;
+}
+
 .modal {
   display: none;
   position: fixed;

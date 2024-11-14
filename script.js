@@ -152,6 +152,7 @@ function subscribeToTasks(date, tasksListEl) {
 
         const checkboxEl = document.createElement('input');
         checkboxEl.type = 'checkbox';
+        checkboxEl.className = 'checkbox-item';
         checkboxEl.checked = taskData.completed;
         checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
 
