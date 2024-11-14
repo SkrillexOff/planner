@@ -91,7 +91,7 @@ legend {
 /* Reset and base styles  */
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: Inter, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,18 +112,21 @@ h2 {
   font-weight: 600;
 }
 
+span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
 #calendar {
   display: flex;
   flex-direction: column;
   gap: 32px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   padding-top: 32px;
 }
 
 .calendar-day {
-  padding-left: 8px;
-  padding-right: 8px;
   border-radius: 8px;
 }
 
@@ -142,7 +145,8 @@ h2 {
 }
 
 .day-weekday {
-  font-size: 0.9em;
+  font-size: 14px;
+  font-weight: 500;
   color: #777;
 }
 
@@ -160,7 +164,7 @@ h2 {
   padding: 16px;
   background: #FFFFFF;
   border-radius: 16px;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 .task-item.done span {
@@ -177,6 +181,7 @@ h2 {
   margin-left: auto;
 }
 
+
 .add-task-btn {
   background-color: #ffffff;
   color: #9C998E;
@@ -184,6 +189,7 @@ h2 {
   width: 100%;
   text-align: left;
   font-size: 16px;
+  font-weight: 500;
   border-radius: 16px;
   border: none;
   cursor: pointer;
