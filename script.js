@@ -100,9 +100,6 @@ function createCalendar() {
   }
 }
 
-
-
-
 // Формат даты в ISO
 function formatDateISO(date) {
   return date.toISOString().split('T')[0];
@@ -157,7 +154,13 @@ function subscribeToTasks(date, tasksListEl) {
 
         const taskTextEl = document.createElement('span');
         taskTextEl.textContent = taskData.task;
-        taskTextEl.onclick = () => openEditTaskModal(doc.id, taskData.task);
+
+        // Добавляем проверку, чтобы не открывалось окно редактирования при клике на чекбокс
+        taskItemEl.onclick = (event) => {
+          if (event.target !== checkboxEl) {
+            openEditTaskModal(doc.id, taskData.task);
+          }
+        };
 
         taskItemEl.appendChild(checkboxEl);
         taskItemEl.appendChild(taskTextEl);
@@ -165,10 +168,6 @@ function subscribeToTasks(date, tasksListEl) {
       });
     });
 }
-
-
-
-
 
 // Завершение задачи
 async function toggleTaskCompletion(taskId, completed, taskItemEl) {
@@ -252,49 +251,3 @@ deleteTaskButton.onclick = async () => {
     }
   }
 };
-
-// Загрузка задач с кнопками для редактирования и удаления
-async function loadTasks(date, tasksListEl) {
-  tasksListEl.innerHTML = '';
-
-  const userId = auth.currentUser.uid;
-
-  const snapshot = await db.collection('tasks')
-    .where('date', '==', date)
-    .where('userId', '==', userId)
-    .get();
-
-  snapshot.forEach((doc) => {
-    const taskData = doc.data();
-    const taskItemEl = document.createElement('li');
-    taskItemEl.className = 'task-item';
-    taskItemEl.setAttribute('data-task-id', doc.id);
-    if (taskData.completed) taskItemEl.classList.add('done');
-
-    const checkboxEl = document.createElement('input');
-    checkboxEl.type = 'checkbox';
-    checkboxEl.checked = taskData.completed;
-    checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
-
-    const taskTextEl = document.createElement('span');
-    taskTextEl.textContent = taskData.task;
-    taskItemEl.onclick = () => openEditTaskModal(doc.id, taskData.task); // Теперь открывается при клике на всю задачу
-
-    taskItemEl.appendChild(checkboxEl);
-    taskItemEl.appendChild(taskTextEl);
-    tasksListEl.appendChild(taskItemEl);
-  });
-}
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    // Отображаем почту пользователя
-    const userEmailElement = document.getElementById('userEmail');
-    userEmailElement.textContent = user.email;  // Устанавливаем email
-
-    // Создаём календарь
-    createCalendar();
-  } else {
-    window.location.href = "login.html";
-  }
-});
