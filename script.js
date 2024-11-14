@@ -92,7 +92,7 @@ function createCalendar() {
 
     const addTaskBtn = document.createElement('button');
     addTaskBtn.classList.add('add-task-btn');
-    addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить задачу';
+    addTaskBtn.innerHTML = '<img src="images/plus.svg" class="plus-button"></img> Добавить задачу';
     addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
 
     dayEl.appendChild(addTaskBtn);

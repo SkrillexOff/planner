@@ -160,7 +160,7 @@ span {
 .task-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 16px;
   background: #FFFFFF;
   border-radius: 16px;
@@ -203,13 +203,53 @@ span {
   font-size: 1.2em;
 }
 
+
+
 .checkbox-item {
+  appearance: none;
+  position: relative;
   width: 24px;
   height: 24px;
-  background: none;
   border-radius: 8px;
   border: 1px solid #000000;
   transition: 500ms;
+}
+
+.checkbox-item::after {
+  content: "";
+  position: absolute;
+  background: #000;
+  font-size: 30px;
+  top: -1px;
+  left: -1px;
+  width: 0px;
+  height: 0px;
+  border-radius: 8px;
+  background-image: url("images/checkbox.svg");
+  background-repeat: no-repeat;
+  transition: 500ms;
+}
+
+.checkbox-item:checked::after {
+  width: 24px;
+  height: 24px;
+  transition: 500ms;
+}
+
+.checkbox-item:disabled,
+.radio-input:disabled {
+  background: #ccc;
+  border-color: #ccc;
+}
+
+.checkbox-item:disabled::after {
+  filter: grayscale(100%);
+}
+
+.plus-button {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
 }
 
 .modal {
