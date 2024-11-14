@@ -251,3 +251,8 @@ deleteTaskButton.onclick = async () => {
     }
   }
 };
+
+// Функция для перезагрузки задач для выбранной даты
+function loadTasks(date, tasksListEl) {
+  subscribeToTasks(date, tasksListEl);
+}
