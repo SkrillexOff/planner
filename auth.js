@@ -7,47 +7,50 @@ const firebaseConfig = {
     messagingSenderId: "482463811896",
     appId: "1:482463811896:web:11700779551db85f8c59cd",
     measurementId: "G-4V1NYWDVKF"
-  };
+};
   
-  // Инициализация Firebase
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  } else {
-    firebase.app(); // если Firebase уже инициализирован
-  }
+// Инициализация Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+} else {
+  firebase.app(); // если Firebase уже инициализирован
+}
   
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
 
-const auth = firebase.auth();
+  if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('login-email').value;
+          const password = document.getElementById('login-password').value;
 
-const loginButton = document.getElementById('loginButton');
-const registerButton = document.getElementById('registerButton');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-
-loginButton.onclick = () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-  if (email && password) {
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        window.location.href = "index.html";
-      })
-      .catch(error => {
-        alert(`Ошибка входа: ${error.message}`);
+          try {
+              await firebase.auth().signInWithEmailAndPassword(email, password);
+              alert('Вход выполнен успешно!');
+              window.location.href = 'index.html'; // Перенаправление на главную страницу
+          } catch (error) {
+              alert('Ошибка входа: ' + error.message);
+          }
       });
   }
-};
 
-registerButton.onclick = () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-  if (email && password) {
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        window.location.href = "index.html";
-      })
-      .catch(error => {
-        alert(`Ошибка регистрации: ${error.message}`);
+  if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('register-email').value;
+          const password = document.getElementById('register-password').value;
+
+          try {
+              await firebase.auth().createUserWithEmailAndPassword(email, password);
+              alert('Регистрация прошла успешно!');
+              window.location.href = 'login.html'; // Перенаправление на страницу входа
+          } catch (error) {
+              alert('Ошибка регистрации: ' + error.message);
+          }
       });
   }
-};
+});
+
+
