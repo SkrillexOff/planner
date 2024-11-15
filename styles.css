@@ -289,7 +289,7 @@ span {
   cursor: pointer;
 }
 
-.modal-2buttons {
+.modal-actions {
   display: flex;
   flex-direction: row;
 }

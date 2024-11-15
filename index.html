@@ -13,15 +13,18 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <h1>Календарь задач</h1>
-  <!-- Изменённый элемент для отображения почты -->
-  <div id="userInfo">
-    <div class="day-weekday">Вы вошли как:</div>
-    <span id="userEmail"></span>
-    <button id="logoutButton">Выйти</button>
-  </div>
+  <header>
+    <h1>Календарь задач</h1>
+    <div id="userInfo">
+      <div class="day-weekday">Вы вошли как:</div>
+      <span id="userEmail"></span>
+      <button id="logoutButton" class="btn">Выйти</button>
+    </div>
+  </header>
+
 
   <div id="calendar"></div>
+
 
   <!-- Модальное окно для добавления задачи -->
   <div id="taskModal" class="modal">
@@ -29,22 +32,26 @@
       <span class="close-btn">&times;</span>
       <h2>Добавить задачу</h2>
       <textarea id="taskInput" placeholder="Название задачи"></textarea>
-      <button id="addTaskButton">Добавить задачу</button>
+      <button id="addTaskButton" class="btn primary">Добавить задачу</button>
     </div>
   </div>
 
   <!-- Модальное окно для редактирования задачи -->
   <div id="editTaskModal" class="modal">
-  <div class="modal-content">
+    <div class="modal-content">
       <span class="close-btn">&times;</span>
       <h2>Редактировать задачу</h2>
       <textarea id="editTaskInput" placeholder="Название задачи"></textarea>
-      <div class="modal-2buttons">
-        <button id="deleteTaskButton">Удалить</button>
-        <button id="saveTaskButton">Сохранить</button>
+      <div class="modal-actions">
+        <button id="deleteTaskButton" class="btn danger">Удалить</button>
+        <button id="saveTaskButton" class="btn primary">Сохранить</button>
       </div>
     </div>
   </div>
+
+  <footer>
+    <p>&copy; 2024 Календарь задач</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
