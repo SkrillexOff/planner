@@ -64,6 +64,7 @@ editFromViewButton.onclick = () => {
   viewTaskModal.classList.remove('show');
   editTaskModal.classList.add('show');
   editTaskInput.value = viewTaskText.textContent;
+  editTaskInput.focus();
 };
 
 // Универсальный обработчик для клика вне модальных окон
