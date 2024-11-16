@@ -466,3 +466,8 @@ span {
 #viewTaskModal .btn.primary {
   margin-top: 10px;
 }
+
+footer {
+  margin-top: 56px;
+  margin-bottom: 32px;
+}
