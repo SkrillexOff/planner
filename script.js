@@ -225,7 +225,7 @@ logoutButton.onclick = () => {
   auth.signOut();
 };
 
-// Отображение почты аакаунта и проверка на вход
+// Отображение почты аакаунта
 auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('userEmail').textContent = user.email;
