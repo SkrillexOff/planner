@@ -14,6 +14,17 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+
+// Ожидаем, что Telegram WebApp SDK будет загружен
+window.onload = () => {
+  const tg = window.Telegram.WebApp;
+  tg.ready(); // Указывает, что SDK готово к использованию
+
+  // Пример работы с SDK
+  console.log("Telegram Web App is ready!");
+};
+
+
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
