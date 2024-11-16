@@ -26,7 +26,8 @@ const editFromViewButton = document.getElementById('editFromViewButton');
 const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
 const saveTaskButton = document.getElementById('saveTaskButton');
-const deleteTaskButton = document.getElementById('deleteTaskButton');
+const deleteFromViewButton = document.getElementById('deleteFromViewButton');
+
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -208,17 +209,18 @@ saveTaskButton.onclick = async () => {
   }
 };
 
-// Удаление задачи
-deleteTaskButton.onclick = async () => {
+// Удаление задачи из окна просмотра задачи
+deleteFromViewButton.onclick = async () => {
   if (selectedTaskId) {
     try {
       await db.collection('tasks').doc(selectedTaskId).delete();
-      editTaskModal.classList.remove('show');
+      viewTaskModal.classList.remove('show');
     } catch (error) {
       alert(`Ошибка при удалении задачи: ${error.message}`);
     }
   }
 };
+
 
 // Выход из аккаунта
 logoutButton.onclick = () => {

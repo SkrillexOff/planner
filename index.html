@@ -42,9 +42,13 @@
       <span class="close-btn">&times;</span>
       <h2>Задача</h2>
       <p id="viewTaskText"></p>
-      <button id="editFromViewButton" class="btn primary">Редактировать</button>
-    </div>
-  </div>
+      <div class="modal-actions">
+        <button id="deleteFromViewButton" class="btn danger">Удалить</button>
+        <button id="editFromViewButton" class="btn primary">Редактировать</button>
+      </div>
+   </div>
+</div>
+
 
 
   <!-- Модальное окно для редактирования задачи -->
@@ -53,10 +57,7 @@
       <span class="close-btn">&times;</span>
       <h2>Редактировать задачу</h2>
       <textarea id="editTaskInput" placeholder="Название задачи"></textarea>
-      <div class="modal-actions">
-        <button id="deleteTaskButton" class="btn danger">Удалить</button>
-        <button id="saveTaskButton" class="btn primary">Сохранить</button>
-      </div>
+      <button id="saveTaskButton" class="btn primary">Сохранить</button>
     </div>
   </div>
 

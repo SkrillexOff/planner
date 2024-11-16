@@ -292,6 +292,7 @@ span {
 .modal-actions {
   display: flex;
   flex-direction: row;
+  gap: 8px;
 }
 
 .close-btn:hover {
@@ -327,7 +328,6 @@ span {
   border: none;
   cursor: pointer;
   margin-top: 10px;
-  margin-left: 4px;
 }
 
 .auth-container {
@@ -405,7 +405,7 @@ span {
   background-color: #c9302c;
 }
 
-#deleteTaskButton {
+#deleteFromViewButton {
   background-color: #d9534f;
   color: #ffffff;
   width: 100%;
@@ -414,10 +414,9 @@ span {
   border: none;
   cursor: pointer;
   margin-top: 10px;
-  margin-right: 4px;
 }
 
-#deleteTaskButton:hover {
+#deleteFromViewButton:hover {
   background-color: #c9302c;
 }
 
