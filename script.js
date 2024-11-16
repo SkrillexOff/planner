@@ -20,6 +20,10 @@ const taskInput = document.getElementById('taskInput');
 const addTaskButton = document.getElementById('addTaskButton');
 const closeBtns = document.querySelectorAll('.close-btn');
 const logoutButton = document.getElementById('logoutButton');
+const viewTaskModal = document.getElementById('viewTaskModal');
+const viewTaskText = document.getElementById('viewTaskText');
+const editFromViewButton = document.getElementById('editFromViewButton');
+
 
 let selectedDate = null;
 
@@ -31,9 +35,39 @@ function openTaskModal(date) {
   taskInput.focus();
 }
 
+// Открытие модального окна просмотра задачи
+function openViewTaskModal(taskId, taskText) {
+  selectedTaskId = taskId; // Запоминаем ID задачи
+  viewTaskText.textContent = taskText; // Устанавливаем текст задачи
+  viewTaskModal.classList.add('show'); // Открываем модальное окно
+}
+
+// Закрытие модального окна просмотра задачи
+viewTaskModal.querySelector('.close-btn').onclick = () => {
+  viewTaskModal.classList.remove('show');
+};
+
+window.onclick = (event) => {
+  if (event.target === viewTaskModal) {
+    viewTaskModal.classList.remove('show');
+  }
+};
+
+
+// Переход от просмотра задачи к её редактированию
+editFromViewButton.onclick = () => {
+  viewTaskModal.classList.remove('show'); // Закрываем окно просмотра
+  editTaskModal.classList.add('show'); // Открываем окно редактирования
+  editTaskInput.value = viewTaskText.textContent; // Передаём текст задачи в поле редактирования
+};
+
+
+
 // Закрытие модальных окон
 function closeModal() {
   taskModal.classList.remove('show');
+  editTaskModal.classList.remove('show');
+  viewTaskModal.classList.remove('show');
 }
 
 closeBtns.forEach(btn => btn.onclick = closeModal);
@@ -41,6 +75,17 @@ closeBtns.forEach(btn => btn.onclick = closeModal);
 window.onclick = (event) => {
   if (event.target === taskModal) closeModal();
 };
+
+// Закрытие модальных окон при нажатии клавиши Esc
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    taskModal.classList.remove('show');
+    editTaskModal.classList.remove('show');
+    viewTaskModal.classList.remove('show');
+  }
+});
+
 
 // Обработчик кнопки выхода
 logoutButton.onclick = async () => {
@@ -164,9 +209,9 @@ function subscribeToTasks(date, tasksListEl) {
 
         taskItemEl.onclick = (event) => {
           if (event.target !== checkboxEl) {
-            openEditTaskModal(doc.id, taskData.task);
+            openViewTaskModal(doc.id, taskData.task); // Открыть окно просмотра задачи
           }
-        };
+        };        
 
         taskItemEl.appendChild(checkboxEl);
         taskItemEl.appendChild(taskTextEl);
@@ -203,12 +248,27 @@ function openEditTaskModal(taskId, currentTaskText) {
 closeBtns.forEach(btn => btn.onclick = () => {
   if (btn.closest('#taskModal')) taskModal.classList.remove('show');
   if (btn.closest('#editTaskModal')) editTaskModal.classList.remove('show');
+  if (btn.closest('#viewTaskModal')) viewTaskModal.classList.remove('show');
 });
 
 window.onclick = (event) => {
   if (event.target === taskModal) taskModal.classList.remove('show');
-  if (event.target === editTaskModal) editTaskModal.classList.remove('show');
+  if (btn.closest('#editTaskModal')) editTaskModal.classList.remove('show');
 };
+
+window.onclick = (event) => {
+  if (event.target === viewTaskModal) {
+    viewTaskModal.classList.remove('show');
+  }
+};
+
+window.onclick = (event) => {
+  if (event.target === taskModal) {
+    taskModal.classList.remove('show');
+  }
+};
+
+
 
 saveTaskButton.onclick = async () => {
   const newTaskText = editTaskInput.value.trim();
