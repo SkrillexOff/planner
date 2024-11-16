@@ -23,88 +23,78 @@ const logoutButton = document.getElementById('logoutButton');
 const viewTaskModal = document.getElementById('viewTaskModal');
 const viewTaskText = document.getElementById('viewTaskText');
 const editFromViewButton = document.getElementById('editFromViewButton');
-
+const editTaskModal = document.getElementById('editTaskModal');
+const editTaskInput = document.getElementById('editTaskInput');
+const saveTaskButton = document.getElementById('saveTaskButton');
+const deleteTaskButton = document.getElementById('deleteTaskButton');
 
 let selectedDate = null;
+let selectedTaskId = null;
 
 // Открытие модального окна добавления задачи
 function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
-  taskInput.value = ''; // Сбрасываем содержимое textarea при открытии модального окна
+  taskInput.value = '';
   taskInput.focus();
 }
 
 // Открытие модального окна просмотра задачи
 function openViewTaskModal(taskId, taskText) {
-  selectedTaskId = taskId; // Запоминаем ID задачи
-  viewTaskText.textContent = taskText; // Устанавливаем текст задачи
-  viewTaskModal.classList.add('show'); // Открываем модальное окно
+  selectedTaskId = taskId;
+  viewTaskText.textContent = taskText;
+  viewTaskModal.classList.add('show');
 }
 
-// Закрытие модального окна просмотра задачи
-viewTaskModal.querySelector('.close-btn').onclick = () => {
-  viewTaskModal.classList.remove('show');
-};
-
-window.onclick = (event) => {
-  if (event.target === viewTaskModal) {
-    viewTaskModal.classList.remove('show');
-  }
-};
-
-
-// Переход от просмотра задачи к её редактированию
-editFromViewButton.onclick = () => {
-  viewTaskModal.classList.remove('show'); // Закрываем окно просмотра
-  editTaskModal.classList.add('show'); // Открываем окно редактирования
-  editTaskInput.value = viewTaskText.textContent; // Передаём текст задачи в поле редактирования
-};
-
-
-
-// Закрытие модальных окон
+// Закрытие всех модальных окон
 function closeModal() {
   taskModal.classList.remove('show');
   editTaskModal.classList.remove('show');
   viewTaskModal.classList.remove('show');
 }
 
-closeBtns.forEach(btn => btn.onclick = closeModal);
+// Обработчик для кнопок закрытия
+closeBtns.forEach(btn => {
+  btn.onclick = closeModal;
+});
 
+// Переход от просмотра задачи к её редактированию
+editFromViewButton.onclick = () => {
+  viewTaskModal.classList.remove('show');
+  editTaskModal.classList.add('show');
+  editTaskInput.value = viewTaskText.textContent;
+};
+
+// Универсальный обработчик для клика вне модальных окон
 window.onclick = (event) => {
-  if (event.target === taskModal) closeModal();
+  if (event.target === taskModal) taskModal.classList.remove('show');
+  if (event.target === editTaskModal) editTaskModal.classList.remove('show');
+  if (event.target === viewTaskModal) viewTaskModal.classList.remove('show');
 };
 
 // Закрытие модальных окон при нажатии клавиши Esc
-
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    taskModal.classList.remove('show');
-    editTaskModal.classList.remove('show');
-    viewTaskModal.classList.remove('show');
-  }
+  if (event.key === 'Escape') closeModal();
 });
 
+// Добавление задачи
+addTaskButton.onclick = async () => {
+  const task = taskInput.value.trim();
+  if (task === '') return;
 
-// Обработчик кнопки выхода
-logoutButton.onclick = async () => {
-  try {
-    await auth.signOut();
-    window.location.href = "login.html";
-  } catch (error) {
-    alert(`Ошибка выхода: ${error.message}`);
-  }
+  const userId = auth.currentUser.uid;
+
+  const taskData = {
+    task,
+    date: selectedDate,
+    completed: false,
+    userId
+  };
+
+  await db.collection('tasks').add(taskData);
+  taskInput.value = '';
+  closeModal();
 };
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById('userEmail').textContent = user.email;
-    createCalendar(); // Инициализация календаря
-  } else {
-    window.location.href = "login.html";
-  }
-});
 
 // Создание календаря
 function createCalendar() {
@@ -156,31 +146,6 @@ function formatDateISO(date) {
   return date.toISOString().split('T')[0];
 }
 
-// Добавление задачи
-addTaskButton.onclick = async () => {
-  const task = taskInput.value.trim();
-  if (task === '') return;
-
-  const userId = auth.currentUser.uid;
-
-  const taskData = {
-    task,
-    date: selectedDate,
-    completed: false,
-    userId
-  };
-
-  await db.collection('tasks').add(taskData);
-
-  // Сбрасываем содержимое textarea после добавления задачи
-  taskInput.value = '';
-
-  closeModal();
-
-  const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
-  loadTasks(selectedDate, tasksListEl);
-};
-
 // Подписка на задачи
 function subscribeToTasks(date, tasksListEl) {
   const userId = auth.currentUser.uid;
@@ -209,9 +174,9 @@ function subscribeToTasks(date, tasksListEl) {
 
         taskItemEl.onclick = (event) => {
           if (event.target !== checkboxEl) {
-            openViewTaskModal(doc.id, taskData.task); // Открыть окно просмотра задачи
+            openViewTaskModal(doc.id, taskData.task);
           }
-        };        
+        };
 
         taskItemEl.appendChild(checkboxEl);
         taskItemEl.appendChild(taskTextEl);
@@ -230,46 +195,7 @@ async function toggleTaskCompletion(taskId, completed, taskItemEl) {
   }
 }
 
-// Работа с модальным окном редактирования задачи
-const editTaskModal = document.getElementById('editTaskModal');
-const editTaskInput = document.getElementById('editTaskInput');
-const saveTaskButton = document.getElementById('saveTaskButton');
-const deleteTaskButton = document.getElementById('deleteTaskButton');
-
-let selectedTaskId = null;
-
-function openEditTaskModal(taskId, currentTaskText) {
-  selectedTaskId = taskId;
-  editTaskModal.classList.add('show');
-  editTaskInput.value = currentTaskText;
-  editTaskInput.focus();
-}
-
-closeBtns.forEach(btn => btn.onclick = () => {
-  if (btn.closest('#taskModal')) taskModal.classList.remove('show');
-  if (btn.closest('#editTaskModal')) editTaskModal.classList.remove('show');
-  if (btn.closest('#viewTaskModal')) viewTaskModal.classList.remove('show');
-});
-
-window.onclick = (event) => {
-  if (event.target === taskModal) taskModal.classList.remove('show');
-  if (btn.closest('#editTaskModal')) editTaskModal.classList.remove('show');
-};
-
-window.onclick = (event) => {
-  if (event.target === viewTaskModal) {
-    viewTaskModal.classList.remove('show');
-  }
-};
-
-window.onclick = (event) => {
-  if (event.target === taskModal) {
-    taskModal.classList.remove('show');
-  }
-};
-
-
-
+// Сохранение изменений задачи
 saveTaskButton.onclick = async () => {
   const newTaskText = editTaskInput.value.trim();
   if (newTaskText === '') return;
@@ -277,27 +203,43 @@ saveTaskButton.onclick = async () => {
   try {
     await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
     editTaskModal.classList.remove('show');
-    const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
-    loadTasks(selectedDate, tasksListEl);
   } catch (error) {
     alert(`Ошибка при сохранении задачи: ${error.message}`);
   }
 };
 
+// Удаление задачи
 deleteTaskButton.onclick = async () => {
   if (selectedTaskId) {
     try {
       await db.collection('tasks').doc(selectedTaskId).delete();
       editTaskModal.classList.remove('show');
-      const tasksListEl = document.querySelector(`[data-date="${selectedDate}"] .tasks-list`);
-      loadTasks(selectedDate, tasksListEl);
     } catch (error) {
       alert(`Ошибка при удалении задачи: ${error.message}`);
     }
   }
 };
 
-// Перезагрузка задач
-function loadTasks(date, tasksListEl) {
-  subscribeToTasks(date, tasksListEl);
-}
+// Выход из аккаунта
+logoutButton.onclick = () => {
+  auth.signOut();
+};
+
+// Отображение почты аакаунта и проверка на вход
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('userEmail').textContent = user.email;
+    createCalendar(); // Инициализация календаря
+  } else {
+    window.location.href = "login.html";
+  }
+});
+
+// Инициализация
+auth.onAuthStateChanged(user => {
+  if (user) {
+    createCalendar();
+  } else {
+    window.location.href = 'login.html';
+  }
+});
