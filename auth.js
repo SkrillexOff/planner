@@ -20,10 +20,13 @@ if (!firebase.apps.length) {
 async function handleTelegramAuth() {
     const telegramData = window.Telegram.WebApp.initDataUnsafe;
 
-    if (telegramData && telegramData.user) {
+    // Логирование Telegram данных
+    alert("Telegram initData:", telegramData);
+
+    if (telegramData && telegramData.user && telegramData.user.id) {
         const userId = String(telegramData.user.id); // Преобразование user.id в строку
-        const email = `${userId}@yandex.ru`; // Используем корректный домен
-        const password = `${userId}baza`; // Генерируем безопасный пароль
+        const email = `${userId}@example.com`; // Используем корректный тестовый домен
+        const password = `TgPass_${userId}_2024`; // Генерируем безопасный пароль
 
         alert(email)
         alert(password)
@@ -31,7 +34,7 @@ async function handleTelegramAuth() {
         try {
             // Попробуем войти с такими учетными данными
             await firebase.auth().signInWithEmailAndPassword(email, password);
-            console.log("Вход через Telegram выполнен успешно!");
+            alert("Вход через Telegram выполнен успешно!");
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (error) {
             if (error.code === 'auth/user-not-found') {
@@ -39,6 +42,9 @@ async function handleTelegramAuth() {
                 try {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
                     alert("Регистрация через Telegram выполнена успешно!");
+                    // После регистрации сразу входим
+                    await firebase.auth().signInWithEmailAndPassword(email, password);
+                    alert("Вход после регистрации успешен!");
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
                     console.error("Ошибка регистрации через Telegram:", registerError);
@@ -50,10 +56,11 @@ async function handleTelegramAuth() {
             }
         }
     } else {
-        // Если пользователь не зашел через Telegram, отправляем на страницу входа
+        console.error("Telegram data отсутствует или повреждено");
         window.location.href = 'login.html';
     }
 }
+
 
 
 // Обработка DOM загрузки
