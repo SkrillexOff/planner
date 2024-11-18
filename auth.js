@@ -23,14 +23,14 @@ async function handleTelegramAuth() {
 
     const isLoginPage = window.location.pathname.endsWith('login.html');
 
-    console.log("Инициализация Telegram Mini App...");
-    console.log("Telegram Init Data:", tg.initDataUnsafe);
+    alert("Инициализация Telegram Mini App...");
+    alert("Telegram Init Data:", tg.initDataUnsafe);
 
     // Проверяем, доступны ли данные пользователя через Telegram Mini App
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
 
-        console.log("Данные пользователя Telegram:", user);
+        alert("Данные пользователя Telegram:", user);
 
         // Формируем данные для авторизации
         const email = `${user.id}@telegram.com`;
@@ -39,30 +39,30 @@ async function handleTelegramAuth() {
         try {
             // Проверяем, существует ли пользователь
             await firebase.auth().signInWithEmailAndPassword(email, password);
-            console.log('Вход выполнен успешно через Telegram');
+            alert('Вход выполнен успешно через Telegram');
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (error) {
             if (error.code === 'auth/user-not-found') {
-                console.log('Пользователь не найден, выполняем регистрацию...');
+                alert('Пользователь не найден, выполняем регистрацию...');
                 try {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    console.log('Регистрация выполнена успешно через Telegram');
+                    alert('Регистрация выполнена успешно через Telegram');
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    console.error('Ошибка при регистрации:', registerError.message);
+                    alert('Ошибка при регистрации:', registerError.message);
                     if (!isLoginPage) {
                         window.location.href = 'login.html'; // Перенаправление на страницу входа
                     }
                 }
             } else {
-                console.error('Ошибка при входе:', error.message);
+                alert('Ошибка при входе:', error.message);
                 if (!isLoginPage) {
                     window.location.href = 'login.html'; // Перенаправление на страницу входа
                 }
             }
         }
     } else {
-        console.warn("Пользовательские данные Telegram недоступны!");
+        alert("Пользовательские данные Telegram недоступны!");
         if (!isLoginPage) {
             window.location.href = 'login.html'; // Перенаправление на страницу входа
         }
