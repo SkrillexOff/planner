@@ -19,66 +19,57 @@ if (!firebase.apps.length) {
 // Проверка и настройка Telegram Mini App авторизации
 async function handleTelegramAuth() {
     const tg = window.Telegram.WebApp;
-    tg.ready(); // Устанавливаем, что SDK готово к использованию
+    tg.ready();
 
-    const isLoginPage = window.location.pathname.endsWith('login.html');
+    alert("Telegram Init Data:", tg.initData);
+    alert("Telegram Init Data Unsafe:", tg.initDataUnsafe);
 
-    alert("Инициализация Telegram Mini App...");
-    alert("Telegram Init Data:" + tg.initDataUnsafe);
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
+        alert("Telegram данные пользователя недоступны.");
+        alert("Откройте приложение через Telegram Mini App.");
+        return;
+    }
 
-    // Проверяем, доступны ли данные пользователя через Telegram Mini App
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
+    const user = tg.initDataUnsafe.user;
+    const email = `${user.id}@telegram.com`;
+    const password = String(user.id);
 
-        alert("Данные пользователя Telegram:" + user);
+    alert("Попытка входа/регистрации с данными:", email, password);
 
-        if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
-            alert("Telegram user.id отсутствует.");
-            alert("Ошибка авторизации: Telegram данные недоступны.");
-            return;
-        }
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+        alert("Пользователь уже аутентифицирован:", currentUser.email);
+        window.location.href = 'index.html'; // Перенаправление на главную страницу
+        return;
+    }
 
-        // Формируем данные для авторизации
-        const email = `${user.username}@telegram.com`;
-        const password = String(user.username);
+    try {
+        // Попытка входа
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        alert("Вход выполнен успешно");
+        window.location.href = 'index.html'; // Перенаправление на главную страницу
+    } catch (error) {
+        alert("Ошибка при входе:", error.code, error.message);
 
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            alert("Некорректный email:" + email);
-            alert("Ошибка авторизации: некорректный email.");
-            return;
-        }
-
-        try {
-            // Проверяем, существует ли пользователь
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-            alert('Вход выполнен успешно через Telegram');
-            window.location.href = 'index.html'; // Перенаправление на главную страницу
-        } catch (error) {
-            alert('Ошибка при входе:' + error.code, error.message); // Логируем ошибку в консоль
-
-            alert("Регистрация нового пользователя:" + email, password);
-        
-            if (error.code === 'auth/user-not-found') {
-                alert('Пользователь не найден, выполняем регистрацию...');
-                try {
-                    await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    alert('Регистрация выполнена успешно через Telegram');
-                    window.location.href = 'index.html'; // Перенаправление на главную страницу
-                } catch (registerError) {
-                    alert('Ошибка при регистрации:' + registerError.code, registerError.message);
-                    alert('Ошибка при регистрации: ' + registerError.message);
-                }
-            } else {
-                alert('Ошибка при входе: ' + error.message); // Показываем сообщение об ошибке пользователю
+        if (error.code === 'auth/user-not-found') {
+            alert("Пользователь не найден, регистрируем нового...");
+            try {
+                // Регистрация нового пользователя
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
+                alert("Регистрация выполнена успешно");
+                // После регистрации перенаправляем
+                window.location.href = 'index.html';
+            } catch (registerError) {
+                alert("Ошибка регистрации:", registerError.code, registerError.message);
+                alert("Ошибка регистрации: " + registerError.message);
             }
-        }        
-    } else {
-        alert("Пользовательские данные Telegram недоступны!");
-        if (!isLoginPage) {
-            window.location.href = 'login.html'; // Перенаправление на страницу входа
+        } else {
+            alert("Ошибка при входе: " + error.message);
         }
     }
 }
+
+
 
 // Запуск при загрузке страницы
 window.onload = () => {
