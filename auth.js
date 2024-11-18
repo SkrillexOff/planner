@@ -8,18 +8,41 @@ const firebaseConfig = {
     appId: "1:482463811896:web:11700779551db85f8c59cd",
     measurementId: "G-4V1NYWDVKF"
 };
-  
+
 // Инициализация Firebase
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 } else {
   firebase.app(); // если Firebase уже инициализирован
 }
-  
+
+// Добавим обработку Telegram авторизации
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
   const registerForm = document.getElementById('register-form');
 
+  const tg = window.Telegram.WebApp;
+  tg.ready(); // Убедимся, что Telegram WebApp SDK готово
+
+  // Проверка на данные Telegram
+  const userData = tg.initDataUnsafe;
+  if (userData && userData.user) {
+    const telegramUser = userData.user;
+    const userEmail = `${telegramUser.id}@telegram.com`;
+
+    // Если пользователь уже авторизован через Telegram, перенаправляем его на страницу календаря
+    firebase.auth().signInWithEmailAndPassword(userEmail, telegramUser.id)
+      .then(() => {
+        window.location.href = 'index.html'; // Перенаправление на главную страницу
+      })
+      .catch(error => {
+        console.error('Ошибка авторизации через Telegram:', error);
+      });
+
+    return; // Прерываем дальнейшее выполнение кода авторизации по email/паролю
+  }
+
+  // Если это не Telegram авторизация, то продолжаем работу с email/пароль
   if (loginForm) {
       loginForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -52,5 +75,3 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 });
-
-
