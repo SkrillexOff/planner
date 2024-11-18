@@ -32,6 +32,12 @@ async function handleTelegramAuth() {
 
         alert("Данные пользователя Telegram:", user);
 
+        if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
+            alert("Telegram user.id отсутствует.");
+            alert("Ошибка авторизации: Telegram данные недоступны.");
+            return;
+        }
+
         // Формируем данные для авторизации
         const email = `${user.id}@telegram.com`;
         const password = String(user.id);
@@ -39,19 +45,21 @@ async function handleTelegramAuth() {
         try {
             // Проверяем, существует ли пользователь
             await firebase.auth().signInWithEmailAndPassword(email, password);
-            console.log('Вход выполнен успешно через Telegram');
+            alert('Вход выполнен успешно через Telegram');
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (error) {
-            console.error('Ошибка при входе:', error.code, error.message); // Логируем ошибку в консоль
+            alert('Ошибка при входе:', error.code, error.message); // Логируем ошибку в консоль
+
+            alert("Регистрация нового пользователя:", email, password);
         
             if (error.code === 'auth/user-not-found') {
-                console.log('Пользователь не найден, выполняем регистрацию...');
+                alert('Пользователь не найден, выполняем регистрацию...');
                 try {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    console.log('Регистрация выполнена успешно через Telegram');
+                    alert('Регистрация выполнена успешно через Telegram');
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    console.error('Ошибка при регистрации:', registerError.code, registerError.message);
+                    alert('Ошибка при регистрации:', registerError.code, registerError.message);
                     alert('Ошибка при регистрации: ' + registerError.message);
                 }
             } else {
