@@ -42,6 +42,7 @@ function signUpOrLoginWithTelegram(telegramUser) {
       auth.signInWithEmailAndPassword(userEmail, userId).then(() => {
         console.log('Пользователь вошел через Telegram');
         createCalendar();
+        window.location.href = 'index.html'; // Перенаправление на календарь
       }).catch(error => {
         console.error("Ошибка при входе:", error);
       });
@@ -50,6 +51,7 @@ function signUpOrLoginWithTelegram(telegramUser) {
       auth.createUserWithEmailAndPassword(userEmail, userId).then(() => {
         console.log('Пользователь зарегистрирован через Telegram');
         createCalendar();
+        window.location.href = 'index.html'; // Перенаправление на календарь
       }).catch(error => {
         console.error("Ошибка при регистрации:", error);
       });
@@ -64,6 +66,26 @@ function signUpOrLoginWithTelegram(telegramUser) {
     console.error("Ошибка при получении данных пользователя:", error);
   });
 }
+
+// Проверка состояния авторизации
+auth.onAuthStateChanged(user => {
+  if (user) {
+    console.log("Пользователь авторизован:", user.email);
+    createCalendar();
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+      logoutButton.style.display = 'block'; // Показываем кнопку выхода
+      logoutButton.onclick = () => {
+        auth.signOut().then(() => {
+          window.location.href = 'login.html'; // Перенаправление на страницу входа
+        });
+      };
+    }
+  } else {
+    console.log("Пользователь не авторизован");
+    window.location.href = 'login.html'; // Перенаправление на страницу входа, если нет авторизации
+  }
+});
 
 // Создание календаря
 function createCalendar() {
@@ -157,3 +179,60 @@ function subscribeToTasks(date, tasksListEl) {
       });
     });
 }
+
+// Завершение задачи
+async function toggleTaskCompletion(taskId, completed, taskItemEl) {
+  try {
+    await db.collection('tasks').doc(taskId).update({ completed });
+    taskItemEl.classList.toggle('done', completed);
+  } catch (error) {
+    alert(`Ошибка при обновлении задачи: ${error.message}`);
+  }
+}
+
+// Сохранение изменений задачи
+saveTaskButton.onclick = async () => {
+  const newTaskText = editTaskInput.value.trim();
+  if (newTaskText === '') return;
+
+  try {
+    await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
+    editTaskModal.classList.remove('show');
+  } catch (error) {
+    alert(`Ошибка при сохранении задачи: ${error.message}`);
+  }
+};
+
+// Удаление задачи из окна просмотра задачи
+deleteFromViewButton.onclick = async () => {
+  if (selectedTaskId) {
+    try {
+      await db.collection('tasks').doc(selectedTaskId).delete();
+      viewTaskModal.classList.remove('show');
+    } catch (error) {
+      alert(`Ошибка при удалении задачи: ${error.message}`);
+    }
+  }
+};
+
+// Выход из аккаунта
+logoutButton.onclick = () => {
+  auth.signOut().then(() => {
+    window.location.href = 'login.html'; // Перенаправление на страницу входа
+  });
+};
+
+// Проверка состояния авторизации
+auth.onAuthStateChanged(user => {
+  if (user) {
+    console.log("Пользователь авторизован:", user.email);
+    createCalendar();
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+      logoutButton.style.display = 'block'; // Показываем кнопку выхода
+    }
+  } else {
+    console.log("Пользователь не авторизован");
+    window.location.href = 'login.html'; // Перенаправление на страницу входа, если нет авторизации
+  }
+});
