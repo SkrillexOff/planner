@@ -25,7 +25,8 @@ async function handleTelegramAuth() {
         const email = `${userId}@yandex.ru`; // Используем корректный домен
         const password = `tg_${userId}_pass`; // Генерируем безопасный пароль
 
-        alert(email, password)
+        alert(email)
+        alert(password)
 
         try {
             // Попробуем войти с такими учетными данными
