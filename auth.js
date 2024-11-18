@@ -85,12 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('login-password').value;
 
             try {
+                // Проверяем, существует ли пользователь
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                alert('Вход выполнен успешно!');
+                console.log('Вход выполнен успешно через Telegram');
                 window.location.href = 'index.html'; // Перенаправление на главную страницу
             } catch (error) {
-                alert('Ошибка входа: ' + error.message);
-            }
+                console.error('Ошибка при входе:', error.code, error.message); // Логируем ошибку в консоль
+            
+                if (error.code === 'auth/user-not-found') {
+                    console.log('Пользователь не найден, выполняем регистрацию...');
+                    try {
+                        await firebase.auth().createUserWithEmailAndPassword(email, password);
+                        console.log('Регистрация выполнена успешно через Telegram');
+                        window.location.href = 'index.html'; // Перенаправление на главную страницу
+                    } catch (registerError) {
+                        console.error('Ошибка при регистрации:', registerError.code, registerError.message);
+                        alert('Ошибка при регистрации: ' + registerError.message);
+                    }
+                } else {
+                    alert('Ошибка при входе: ' + error.message); // Показываем сообщение об ошибке пользователю
+                }
+            }            
         });
     }
 
