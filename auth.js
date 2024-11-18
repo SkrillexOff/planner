@@ -21,7 +21,7 @@ async function handleTelegramAuth() {
     try {
         const telegramData = window.Telegram.WebApp.initDataUnsafe;
 
-        // Логируем данные от Telegram
+        // Проверка данных Telegram
         alert("Telegram initDataUnsafe:", telegramData);
 
         if (!telegramData || !telegramData.user || !telegramData.user.id) {
@@ -48,15 +48,18 @@ async function handleTelegramAuth() {
 
             if (loginError.code === 'auth/user-not-found') {
                 alert("Пользователь не найден. Пытаемся зарегистрировать...");
+
                 try {
                     // Регистрация нового пользователя
-                    await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    alert("Успешная регистрация. Входим...");
+                    const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                    alert("Успешная регистрация:", userCredential);
+
                     // Выполняем вход сразу после регистрации
                     await firebase.auth().signInWithEmailAndPassword(email, password);
+                    alert("Вход после регистрации успешен!");
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    console.error("Ошибка регистрации:", registerError);
+                    console.error("Ошибка регистрации через Telegram:", registerError);
                     alert("Ошибка регистрации через Telegram: " + registerError.message);
                 }
             } else {
@@ -68,6 +71,7 @@ async function handleTelegramAuth() {
         alert("Ошибка: " + generalError.message);
     }
 }
+
 
 
 
