@@ -52,6 +52,25 @@ async function handleTelegramAuth() {
                     const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
                     console.log("Регистрация успешна:", registerResult.user);
 
+                    const db = firebase.firestore();
+
+                    try {
+                        const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                        console.log("Регистрация успешна:", registerResult.user);
+
+                        // Добавляем данные пользователя в Firestore
+                        await db.collection('users').doc(registerResult.user.uid).set({
+                            userId: telegramData.user.id,
+                            email: email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        alert("Пользователь добавлен в Firestore");
+                    } catch (error) {
+                        alert("Ошибка добавления пользователя в Firestore:" + error);
+                    }
+
+
                     // Вход после успешной регистрации
                     const newLoginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
                     console.log("Вход после регистрации выполнен успешно:", newLoginResult.user);
