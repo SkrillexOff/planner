@@ -23,7 +23,7 @@ async function handleTelegramAuth() {
 
         // Проверяем данные Telegram
         if (!telegramData || !telegramData.user || !telegramData.user.id) {
-            console.error("Telegram данные отсутствуют или некорректны.");
+            alert("Telegram данные отсутствуют или некорректны.");
             alert("Проблема с инициализацией Telegram Mini App.");
             window.location.href = 'login.html';
             return;
@@ -33,18 +33,19 @@ async function handleTelegramAuth() {
         const email = `${userId}@example.com`; // Генерируем email
         const password = `TgPass_${userId}_2024`; // Генерируем пароль
 
-        console.log("Сформированные данные для Firebase:", { email, password });
+        alert(email)
+        alert(password)
 
         // Попытка входа
         try {
             const loginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
-            console.log("Успешный вход через Telegram:", loginResult.user);
+            alert("Успешный вход через Telegram:" + loginResult.user);
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (loginError) {
-            console.error("Ошибка входа:", loginError);
+            alert("Ошибка входа:" + loginError);
 
             if (loginError.code === 'auth/user-not-found') {
-                console.log("Пользователь не найден. Выполняем регистрацию...");
+                alert("Пользователь не найден. Выполняем регистрацию...");
 
                 // Выполняем регистрацию
                 try {
@@ -60,10 +61,10 @@ async function handleTelegramAuth() {
                     alert("Ошибка регистрации: " + registerError.message);
 
                     if (registerError.code === 'auth/invalid-email') {
-                        console.error("Некорректный email:", email);
+                        alert("Некорректный email:" + email);
                     }
                     if (registerError.code === 'auth/weak-password') {
-                        console.error("Пароль не соответствует требованиям:", password);
+                        alert("Пароль не соответствует требованиям:" + password);
                     }
                 }
             } else {
