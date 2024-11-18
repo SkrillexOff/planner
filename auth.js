@@ -30,7 +30,7 @@ async function handleTelegramAuth() {
 
         const userId = String(telegramData.user.id); // Преобразуем user.id в строку
         const email = `${userId}@example.com`; // Генерируем email
-        const password = `TgPass_${userId}_2024`; // Генерируем пароль
+        const password = `tgpass${userId}2024`; // Генерируем пароль
 
         alert(email);
         alert(password);
@@ -49,6 +49,20 @@ async function handleTelegramAuth() {
                     // Регистрация нового пользователя
                     const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
                     console.log("Регистрация успешна:", registerResult.user);
+
+                    const db = firebase.firestore();
+                    const userRef = db.collection('users').doc(firebase.auth().currentUser.uid);
+
+                    userRef.set({
+                        userId: telegramData.user.id,
+                        email: email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        alert("Данные пользователя добавлены в Firestore.");
+                    }).catch((error) => {
+                        alert("Ошибка добавления данных в Firestore:" + error);
+                    });
+
 
                     // Вход после успешной регистрации
                     await firebase.auth().signInWithEmailAndPassword(email, password);
