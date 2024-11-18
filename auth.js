@@ -21,6 +21,8 @@ async function handleTelegramAuth() {
     const tg = window.Telegram.WebApp;
     tg.ready(); // Устанавливаем, что SDK готово к использованию
 
+    const isLoginPage = window.location.pathname.endsWith('login.html');
+
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
 
@@ -42,14 +44,22 @@ async function handleTelegramAuth() {
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
                     console.error('Ошибка при регистрации:', registerError.message);
+                    if (!isLoginPage) {
+                        window.location.href = 'login.html'; // Перенаправление на страницу входа
+                    }
                 }
             } else {
                 console.error('Ошибка при входе:', error.message);
+                if (!isLoginPage) {
+                    window.location.href = 'login.html'; // Перенаправление на страницу входа
+                }
             }
         }
     } else {
-        // Если пользователь не вошёл через Telegram
-        window.location.href = 'login.html'; // Перенаправление на страницу входа
+        // Если пользователь не вошёл через Telegram и это не страница входа
+        if (!isLoginPage) {
+            window.location.href = 'login.html'; // Перенаправление на страницу входа
+        }
     }
 }
 
