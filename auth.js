@@ -22,8 +22,8 @@ async function handleTelegramAuth() {
 
     if (telegramData && telegramData.user) {
         const userId = String(telegramData.user.id); // Преобразование user.id в строку
-        const email = `${userId}@telegram.com`;
-        const password = userId;
+        const email = `${userId}@telegram.fake`; // Используем корректный домен
+        const password = `tg_${userId}_pass`; // Генерируем безопасный пароль
 
         try {
             // Попробуем войти с такими учетными данными
@@ -51,6 +51,7 @@ async function handleTelegramAuth() {
         window.location.href = 'login.html';
     }
 }
+
 
 // Обработка DOM загрузки
 document.addEventListener('DOMContentLoaded', () => {
