@@ -39,8 +39,8 @@ async function handleTelegramAuth() {
         }
 
         // Формируем данные для авторизации
-        const email = `${user.id}@telegram.com`;
-        const password = String(user.id);
+        const email = `${user.username}@telegram.com`;
+        const password = String(user.username);
 
         if (!/^\S+@\S+\.\S+$/.test(email)) {
             console.error("Некорректный email:", email);
