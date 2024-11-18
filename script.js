@@ -14,53 +14,17 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Telegram WebApp SDK
-window.onload = async () => {
+
+// Ожидаем, что Telegram WebApp SDK будет загружен
+window.onload = () => {
   const tg = window.Telegram.WebApp;
-  tg.ready();
+  tg.ready(); // Указывает, что SDK готово к использованию
 
+  // Пример работы с SDK
   console.log("Telegram Web App is ready!");
-
-  const initData = tg.initDataUnsafe;
-  const userId = initData?.user?.id;
-  const userName = initData?.user?.first_name;
-
-  if (userId && userName) {
-    const userEmail = `${userId}@telegram.com`;
-    const userPassword = String(userId); // Преобразуем userId в строку
-
-    try {
-      // Попытка входа
-      await auth.signInWithEmailAndPassword(userEmail, userPassword);
-      console.log("Вход через Telegram выполнен.");
-    } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        // Если пользователь не найден, создаём нового
-        try {
-          await auth.createUserWithEmailAndPassword(userEmail, userPassword);
-          console.log("Пользователь Telegram успешно создан.");
-        } catch (creationError) {
-          console.error("Ошибка создания пользователя Telegram:", creationError.message);
-          alert("Ошибка создания аккаунта: " + creationError.message);
-          return;
-        }
-      } else {
-        console.error("Ошибка входа через Telegram:", error.message);
-        alert("Не удалось войти: " + error.message);
-        return;
-      }
-    }
-
-    // Успешная авторизация
-    document.getElementById('userEmail').textContent = `Telegram: ${userName}`;
-    createCalendar();
-  } else {
-    // Если пользователь зашёл не через Telegram
-    window.location.href = "login.html";
-  }
 };
 
-// --- Остальная логика приложения ---
+
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
@@ -74,6 +38,7 @@ const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
 const saveTaskButton = document.getElementById('saveTaskButton');
 const deleteFromViewButton = document.getElementById('deleteFromViewButton');
+
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -246,45 +211,49 @@ async function toggleTaskCompletion(taskId, completed, taskItemEl) {
 // Сохранение изменений задачи
 saveTaskButton.onclick = async () => {
   const newTaskText = editTaskInput.value.trim();
-  if (!newTaskText || !selectedTaskId) return;
+  if (newTaskText === '') return;
 
   try {
     await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
-    selectedTaskId = null;
-    closeModal();
+    editTaskModal.classList.remove('show');
   } catch (error) {
-    alert(`Ошибка при обновлении задачи: ${error.message}`);
+    alert(`Ошибка при сохранении задачи: ${error.message}`);
   }
 };
 
-// Удаление задачи из окна просмотра
+// Удаление задачи из окна просмотра задачи
 deleteFromViewButton.onclick = async () => {
-  if (!selectedTaskId) return;
-
-  try {
-    await db.collection('tasks').doc(selectedTaskId).delete();
-    selectedTaskId = null;
-    closeModal();
-  } catch (error) {
-    alert(`Ошибка при удалении задачи: ${error.message}`);
+  if (selectedTaskId) {
+    try {
+      await db.collection('tasks').doc(selectedTaskId).delete();
+      viewTaskModal.classList.remove('show');
+    } catch (error) {
+      alert(`Ошибка при удалении задачи: ${error.message}`);
+    }
   }
 };
 
-// Обработка выхода из аккаунта
-document.getElementById('logoutButton')?.addEventListener('click', () => {
-  auth.signOut();
-  window.location.href = "login.html";
-});
 
-// Firebase State Change Listener
+// Выход из аккаунта
+logoutButton.onclick = () => {
+  auth.signOut();
+};
+
+// Отображение почты аакаунта
 auth.onAuthStateChanged(user => {
   if (user) {
-    console.log("Пользователь авторизован:", user.email);
-    if (!window.Telegram.WebApp.initDataUnsafe.user) {
-      document.getElementById('userEmail').textContent = user.email;
-    }
+    document.getElementById('userEmail').textContent = user.email;
     createCalendar(); // Инициализация календаря
   } else {
     window.location.href = "login.html";
+  }
+});
+
+// Инициализация
+auth.onAuthStateChanged(user => {
+  if (user) {
+    createCalendar();
+  } else {
+    window.location.href = 'login.html';
   }
 });
