@@ -36,46 +36,38 @@ async function handleTelegramAuth() {
         alert(password);
 
         try {
-            // Попытка входа
             const loginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
-            alert("Успешный вход через Telegram: " + loginResult.user);
+            alert("Успешный вход через Telegram:" + loginResult.user);
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (loginError) {
-            // Проверка на ошибку входа
+            alert("Ошибка входа:" + loginError); // Логируем ошибку входа для дальнейшего анализа
+        
             if (loginError.code === 'auth/user-not-found') {
                 alert("Пользователь не найден. Выполняем регистрацию...");
-
+        
+                // Регистрация нового пользователя
                 try {
-                    // Регистрация нового пользователя
                     const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    console.log("Регистрация успешна:", registerResult.user);
-
-                    const db = firebase.firestore();
-                    const userRef = db.collection('users').doc(firebase.auth().currentUser.uid);
-
-                    userRef.set({
-                        userId: telegramData.user.id,
-                        email: email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        alert("Данные пользователя добавлены в Firestore.");
-                    }).catch((error) => {
-                        alert("Ошибка добавления данных в Firestore:" + error);
-                    });
-
-
+                    alert("Регистрация успешна:" + registerResult.user);
+        
                     // Вход после успешной регистрации
                     await firebase.auth().signInWithEmailAndPassword(email, password);
-                    console.log("Вход после регистрации выполнен успешно.");
+                    alert("Вход после регистрации выполнен успешно.");
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    console.error("Ошибка при регистрации:", registerError);
+                    console.log("Ошибка при регистрации:", registerError); // Логируем подробности ошибки регистрации
                     alert("Ошибка регистрации: " + registerError.message);
+                    if (registerError.code) {
+                        alert("Код ошибки: " + registerError.code); // Показываем код ошибки
+                    }
+                    if (registerError.stack) {
+                        console.log("Стек ошибки:", registerError.stack); // Логируем стек ошибки для дополнительного анализа
+                    }
                 }
             } else {
                 alert("Ошибка входа: " + loginError.message);
             }
-        }
+        }        
     } catch (generalError) {
         console.error("Общая ошибка авторизации через Telegram:", generalError);
         alert("Ошибка: " + generalError.message);
