@@ -10,41 +10,48 @@ const firebaseConfig = {
   };
   
   // Инициализация Firebase
-  firebase.initializeApp(firebaseConfig);
-  
-  // Firebase Authentication
-  const auth = firebase.auth();
-  
-  // Регистрация нового пользователя
-  async function registerUser(email, password) {
-    try {
-      await auth.createUserWithEmailAndPassword(email, password);
-      alert("Регистрация прошла успешно! Войдите в систему.");
-      window.location.href = "login.html";
-    } catch (error) {
-      alert(`Ошибка регистрации: ${error.message}`);
-    }
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  } else {
+    firebase.app();
   }
   
-  // Вход в систему
-  async function loginUser(email, password) {
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-      alert("Вход выполнен успешно!");
-      window.location.href = "index.html";
-    } catch (error) {
-      alert(`Ошибка входа: ${error.message}`);
-    }
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
   
-  // Выход из системы
-  async function logoutUser() {
-    try {
-      await auth.signOut();
-      alert("Вы вышли из системы.");
-      window.location.href = "login.html";
-    } catch (error) {
-      alert(`Ошибка выхода: ${error.message}`);
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+  
+        try {
+          await firebase.auth().signInWithEmailAndPassword(email, password);
+          alert('Вход выполнен успешно!');
+          window.location.href = 'index.html'; // Перенаправление на главную страницу
+        } catch (error) {
+          console.error("Ошибка входа:", error.message);
+          alert('Ошибка входа: ' + error.message);
+        }
+      });
     }
-  }
+  
+    if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+  
+        try {
+          await firebase.auth().createUserWithEmailAndPassword(email, password);
+          alert('Регистрация прошла успешно!');
+          window.location.href = 'login.html'; // Перенаправление на страницу входа
+        } catch (error) {
+          console.error("Ошибка регистрации:", error.message);
+          alert('Ошибка регистрации: ' + error.message);
+        }
+      });
+    }
+  });
   

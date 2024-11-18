@@ -14,54 +14,48 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Ожидаем загрузку Telegram WebApp SDK
+// Telegram WebApp SDK
 window.onload = async () => {
   const tg = window.Telegram.WebApp;
+  tg.ready();
 
-  tg.ready(); // Telegram SDK готово
   console.log("Telegram Web App is ready!");
 
   const initData = tg.initDataUnsafe;
+  const userId = initData?.user?.id;
+  const userName = initData?.user?.first_name;
 
-  if (initData?.user?.id) {
-    const userId = initData.user.id; // ID пользователя Telegram
-    const userName = initData.user.first_name || "Пользователь";
-    const userEmail = `${userId}@telegram.com`; // Псевдо-Email
-    const userPassword = userId.toString(); // Пароль пользователя
+  if (userId && userName) {
+    const userEmail = `${userId}@telegram.com`;
+    const userPassword = userId;
 
     try {
-      // Проверяем, существует ли пользователь в Firebase
-      await firebase.auth().signInWithEmailAndPassword(userEmail, userPassword);
-
-      // Успешный вход
-      console.log("Пользователь Telegram вошёл.");
+      // Попытка входа
+      await auth.signInWithEmailAndPassword(userEmail, userPassword);
+      console.log("Вход через Telegram выполнен.");
     } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        // Если пользователя нет, создаём его
+      if (error.code === "auth/user-not-found") {
+        // Если пользователь не найден, создаём нового
         try {
-          await firebase.auth().createUserWithEmailAndPassword(userEmail, userPassword);
-
-          // После создания пользователя авторизуем его
-          console.log("Создан новый пользователь Telegram.");
-          await firebase.auth().signInWithEmailAndPassword(userEmail, userPassword);
-        } catch (createError) {
-          console.error("Ошибка создания пользователя Telegram:", createError);
-          alert("Не удалось создать пользователя Telegram. Попробуйте позже.");
+          await auth.createUserWithEmailAndPassword(userEmail, userPassword);
+          console.log("Пользователь Telegram успешно создан.");
+        } catch (creationError) {
+          console.error("Ошибка создания пользователя Telegram:", creationError.message);
+          alert("Ошибка создания аккаунта: " + creationError.message);
           return;
         }
       } else {
-        console.error("Ошибка авторизации:", error);
-        alert("Не удалось войти. Попробуйте позже.");
+        console.error("Ошибка входа через Telegram:", error.message);
+        alert("Не удалось войти: " + error.message);
         return;
       }
     }
 
-    // Авторизация успешна, показываем календарь
+    // Успешная авторизация
     document.getElementById('userEmail').textContent = `Telegram: ${userName}`;
     createCalendar();
   } else {
-    // Пользователь зашёл не через Telegram, перенаправляем на login.html
-    console.log("Не Telegram Mini App. Перенаправление на login.html.");
+    // Если пользователь зашёл не через Telegram
     window.location.href = "login.html";
   }
 };
