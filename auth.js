@@ -33,7 +33,8 @@ async function handleTelegramAuth() {
         const email = `${userId}@example.com`; // Генерируем email
         const password = `TgPass_${userId}_2024`; // Генерируем пароль
 
-        console.log("Сформированные данные для Firebase:", { email, password });
+        alert("Email:" + email);
+        alert("Пароль:" + password);
 
         try {
             // Попытка входа
