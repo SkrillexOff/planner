@@ -23,8 +23,14 @@ async function handleTelegramAuth() {
 
     const isLoginPage = window.location.pathname.endsWith('login.html');
 
+    console.log("Инициализация Telegram Mini App...");
+    console.log("Telegram Init Data:", tg.initDataUnsafe);
+
+    // Проверяем, доступны ли данные пользователя через Telegram Mini App
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
+
+        console.log("Данные пользователя Telegram:", user);
 
         // Формируем данные для авторизации
         const email = `${user.id}@telegram.com`;
@@ -37,7 +43,7 @@ async function handleTelegramAuth() {
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (error) {
             if (error.code === 'auth/user-not-found') {
-                // Если пользователь не существует, регистрируем его
+                console.log('Пользователь не найден, выполняем регистрацию...');
                 try {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
                     console.log('Регистрация выполнена успешно через Telegram');
@@ -56,7 +62,7 @@ async function handleTelegramAuth() {
             }
         }
     } else {
-        // Если пользователь не вошёл через Telegram и это не страница входа
+        console.warn("Пользовательские данные Telegram недоступны!");
         if (!isLoginPage) {
             window.location.href = 'login.html'; // Перенаправление на страницу входа
         }
