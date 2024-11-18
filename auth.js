@@ -44,6 +44,9 @@ async function handleTelegramAuth() {
             alert("Успешный вход через Telegram.");
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (loginError) {
+            alert(email)
+            alert(password)
+
             alert("Ошибка входа:", loginError);
 
             if (loginError.code === 'auth/user-not-found') {
