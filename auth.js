@@ -24,7 +24,7 @@ async function handleTelegramAuth() {
     alert("Telegram initData:", telegramData);
 
     if (telegramData && telegramData.user && telegramData.user.username) {
-        const userId = String(telegramData.user.id); // Преобразование user.id в строку
+        const userId = String(telegramData.user.username); // Преобразование user.id в строку
         const email = `${userId}@telegram.com`; // Используем корректный тестовый домен
         const password = `TgPass_${userId}_2024`; // Генерируем безопасный пароль
 
