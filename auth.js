@@ -38,7 +38,7 @@ async function handleTelegramAuth() {
                 // Если пользователь не найден, регистрируем его
                 try {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    console.log("Регистрация через Telegram выполнена успешно!");
+                    alert("Регистрация через Telegram выполнена успешно!");
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
                     console.error("Ошибка регистрации через Telegram:", registerError);
