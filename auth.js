@@ -19,7 +19,7 @@ if (!firebase.apps.length) {
 // Функция для обработки авторизации через Telegram
 async function handleTelegramAuth() {
     try {
-        const telegramData = window.Telegram.WebApp.initData;
+        const telegramData = window.Telegram.WebApp.initDataUnsafe;
 
         // Проверяем данные Telegram
         if (!telegramData || !telegramData.user || !telegramData.user.id) {
