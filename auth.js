@@ -24,11 +24,11 @@ async function handleTelegramAuth() {
     const isLoginPage = window.location.pathname.endsWith('login.html');
 
     alert("Инициализация Telegram Mini App...");
-    alert("Telegram Init Data:", tg.initDataUnsafe);
+    alert("Telegram Init Data:", tg.initData);
 
     // Проверяем, доступны ли данные пользователя через Telegram Mini App
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
+    if (tg.initData && tg.initData.user) {
+        const user = tg.initData.user;
 
         alert("Данные пользователя Telegram:", user);
 
