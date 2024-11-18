@@ -29,7 +29,7 @@ const firebaseConfig = {
         try {
           await firebase.auth().signInWithEmailAndPassword(email, password);
           alert('Вход выполнен успешно!');
-          window.location.href = 'index.html'; // Перенаправление на главную страницу
+          window.location.href = 'index.html';
         } catch (error) {
           console.error("Ошибка входа:", error.message);
           alert('Ошибка входа: ' + error.message);
@@ -46,7 +46,7 @@ const firebaseConfig = {
         try {
           await firebase.auth().createUserWithEmailAndPassword(email, password);
           alert('Регистрация прошла успешно!');
-          window.location.href = 'login.html'; // Перенаправление на страницу входа
+          window.location.href = 'login.html';
         } catch (error) {
           console.error("Ошибка регистрации:", error.message);
           alert('Ошибка регистрации: ' + error.message);

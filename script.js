@@ -27,7 +27,7 @@ window.onload = async () => {
 
   if (userId && userName) {
     const userEmail = `${userId}@telegram.com`;
-    const userPassword = userId;
+    const userPassword = String(userId); // Преобразуем userId в строку
 
     try {
       // Попытка входа
@@ -270,12 +270,21 @@ deleteFromViewButton.onclick = async () => {
   }
 };
 
-// Выход из системы
-logoutButton.onclick = async () => {
-  try {
-    await auth.signOut();
+// Обработка выхода из аккаунта
+document.getElementById('logoutButton')?.addEventListener('click', () => {
+  auth.signOut();
+  window.location.href = "login.html";
+});
+
+// Firebase State Change Listener
+auth.onAuthStateChanged(user => {
+  if (user) {
+    console.log("Пользователь авторизован:", user.email);
+    if (!window.Telegram.WebApp.initDataUnsafe.user) {
+      document.getElementById('userEmail').textContent = user.email;
+    }
+    createCalendar(); // Инициализация календаря
+  } else {
     window.location.href = "login.html";
-  } catch (error) {
-    alert(`Ошибка при выходе из системы: ${error.message}`);
   }
-};
+});
