@@ -14,17 +14,59 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
-// Ожидаем, что Telegram WebApp SDK будет загружен
-window.onload = () => {
+// Ожидаем загрузку Telegram WebApp SDK
+window.onload = async () => {
   const tg = window.Telegram.WebApp;
-  tg.ready(); // Указывает, что SDK готово к использованию
 
-  // Пример работы с SDK
+  tg.ready(); // Telegram SDK готово
   console.log("Telegram Web App is ready!");
+
+  const initData = tg.initDataUnsafe;
+
+  if (initData?.user?.id) {
+    const userId = initData.user.id; // ID пользователя Telegram
+    const userName = initData.user.first_name || "Пользователь";
+    const userEmail = `${userId}@telegram.com`; // Псевдо-Email
+    const userPassword = userId.toString(); // Пароль пользователя
+
+    try {
+      // Проверяем, существует ли пользователь в Firebase
+      await firebase.auth().signInWithEmailAndPassword(userEmail, userPassword);
+
+      // Успешный вход
+      console.log("Пользователь Telegram вошёл.");
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        // Если пользователя нет, создаём его
+        try {
+          await firebase.auth().createUserWithEmailAndPassword(userEmail, userPassword);
+
+          // После создания пользователя авторизуем его
+          console.log("Создан новый пользователь Telegram.");
+          await firebase.auth().signInWithEmailAndPassword(userEmail, userPassword);
+        } catch (createError) {
+          console.error("Ошибка создания пользователя Telegram:", createError);
+          alert("Не удалось создать пользователя Telegram. Попробуйте позже.");
+          return;
+        }
+      } else {
+        console.error("Ошибка авторизации:", error);
+        alert("Не удалось войти. Попробуйте позже.");
+        return;
+      }
+    }
+
+    // Авторизация успешна, показываем календарь
+    document.getElementById('userEmail').textContent = `Telegram: ${userName}`;
+    createCalendar();
+  } else {
+    // Пользователь зашёл не через Telegram, перенаправляем на login.html
+    console.log("Не Telegram Mini App. Перенаправление на login.html.");
+    window.location.href = "login.html";
+  }
 };
 
-
+// --- Остальная логика приложения ---
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
@@ -38,7 +80,6 @@ const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
 const saveTaskButton = document.getElementById('saveTaskButton');
 const deleteFromViewButton = document.getElementById('deleteFromViewButton');
-
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -211,49 +252,36 @@ async function toggleTaskCompletion(taskId, completed, taskItemEl) {
 // Сохранение изменений задачи
 saveTaskButton.onclick = async () => {
   const newTaskText = editTaskInput.value.trim();
-  if (newTaskText === '') return;
+  if (!newTaskText || !selectedTaskId) return;
 
   try {
     await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
-    editTaskModal.classList.remove('show');
+    selectedTaskId = null;
+    closeModal();
   } catch (error) {
-    alert(`Ошибка при сохранении задачи: ${error.message}`);
+    alert(`Ошибка при обновлении задачи: ${error.message}`);
   }
 };
 
-// Удаление задачи из окна просмотра задачи
+// Удаление задачи из окна просмотра
 deleteFromViewButton.onclick = async () => {
-  if (selectedTaskId) {
-    try {
-      await db.collection('tasks').doc(selectedTaskId).delete();
-      viewTaskModal.classList.remove('show');
-    } catch (error) {
-      alert(`Ошибка при удалении задачи: ${error.message}`);
-    }
+  if (!selectedTaskId) return;
+
+  try {
+    await db.collection('tasks').doc(selectedTaskId).delete();
+    selectedTaskId = null;
+    closeModal();
+  } catch (error) {
+    alert(`Ошибка при удалении задачи: ${error.message}`);
   }
 };
 
-
-// Выход из аккаунта
-logoutButton.onclick = () => {
-  auth.signOut();
-};
-
-// Отображение почты аакаунта
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById('userEmail').textContent = user.email;
-    createCalendar(); // Инициализация календаря
-  } else {
+// Выход из системы
+logoutButton.onclick = async () => {
+  try {
+    await auth.signOut();
     window.location.href = "login.html";
+  } catch (error) {
+    alert(`Ошибка при выходе из системы: ${error.message}`);
   }
-});
-
-// Инициализация
-auth.onAuthStateChanged(user => {
-  if (user) {
-    createCalendar();
-  } else {
-    window.location.href = 'login.html';
-  }
-});
+};
