@@ -19,73 +19,16 @@ window.onload = () => {
   const tg = window.Telegram.WebApp;
   tg.ready(); // Указывает, что SDK готово к использованию
   console.log("Telegram Web App is ready!");
+
+  // Получаем данные пользователя из Telegram
+  const userData = tg.initDataUnsafe;
+  if (userData && userData.user) {
+    const telegramUser = userData.user;
+    signUpWithTelegram(telegramUser);
+  }
 };
 
-// Получение данных пользователя из Telegram WebApp
-function getTelegramUserData() {
-  const tg = window.Telegram.WebApp;
-  const userData = tg.initData;
-  const userId = tg.initDataUnsafe.user.id;
-  const firstName = tg.initDataUnsafe.user.first_name;
-  const lastName = tg.initDataUnsafe.user.last_name;
-  const username = tg.initDataUnsafe.user.username;
-  const photoUrl = tg.initDataUnsafe.user.photo_url;
-
-  console.log("Telegram User Data:", userData);
-  return { userId, firstName, lastName, username, photoUrl };
-}
-
-// Авторизация через Firebase или Telegram
-async function signUpWithTelegram() {
-  const userData = getTelegramUserData();
-  const email = `${userData.username}@telegram.com`; // Пример использования username в качестве email
-
-  try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, "defaultPassword");
-    const user = userCredential.user;
-
-    // Сохраняем информацию о пользователе в Firestore
-    await db.collection('users').doc(user.uid).set({
-      telegramId: userData.userId,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      username: userData.username,
-      photoUrl: userData.photoUrl,
-    });
-
-    console.log("User created with Telegram:", user);
-  } catch (error) {
-    console.error("Error during sign-up:", error);
-  }
-}
-
-async function signInWithTelegram() {
-  const userData = getTelegramUserData();
-  const email = `${userData.username}@telegram.com`; // Пример использования username в качестве email
-
-  try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, "defaultPassword");
-    const user = userCredential.user;
-    console.log("User signed in with Telegram:", user);
-  } catch (error) {
-    console.error("Error during sign-in:", error);
-  }
-}
-
-// Переход от Firebase аутентификации к Telegram
-auth.onAuthStateChanged(user => {
-  if (user) {
-    createCalendar(); // Инициализация календаря
-  } else {
-    if (window.Telegram.WebApp.initData) {
-      signInWithTelegram(); // Вход через Telegram Mini App
-    } else {
-      window.location.href = "login.html"; // Обычный вход через Firebase
-    }
-  }
-});
-
-// Календарь и задачи
+// Модальные окна
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
@@ -171,46 +114,50 @@ addTaskButton.onclick = async () => {
 
 // Создание календаря
 function createCalendar() {
-  const today = new Date();
-  const displayedDates = new Set();
+  try {
+    const today = new Date();
+    const displayedDates = new Set();
 
-  for (let i = 0; i < 30; i++) {
-    const day = new Date(today);
-    day.setDate(today.getDate() + i);
+    for (let i = 0; i < 30; i++) {
+      const day = new Date(today);
+      day.setDate(today.getDate() + i);
 
-    const dayStr = formatDateISO(day);
+      const dayStr = formatDateISO(day);
 
-    if (displayedDates.has(dayStr)) continue;
-    displayedDates.add(dayStr);
+      if (displayedDates.has(dayStr)) continue;
+      displayedDates.add(dayStr);
 
-    const existingDayElement = document.querySelector(`[data-date="${dayStr}"]`);
-    if (existingDayElement) continue;
+      const existingDayElement = document.querySelector(`[data-date="${dayStr}"]`);
+      if (existingDayElement) continue;
 
-    const dayEl = document.createElement('div');
-    dayEl.classList.add('calendar-day');
-    dayEl.dataset.date = dayStr;
+      const dayEl = document.createElement('div');
+      dayEl.classList.add('calendar-day');
+      dayEl.dataset.date = dayStr;
 
-    const dayHeader = document.createElement('div');
-    dayHeader.classList.add('day-header');
-    dayHeader.innerHTML = `
-      <div class="day-date">${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}</div>
-      <div class="day-weekday">${day.toLocaleString('ru-RU', { weekday: 'long' })}</div>
-    `;
+      const dayHeader = document.createElement('div');
+      dayHeader.classList.add('day-header');
+      dayHeader.innerHTML = `
+        <div class="day-date">${day.getDate()} ${day.toLocaleString('ru-RU', { month: 'long' })}</div>
+        <div class="day-weekday">${day.toLocaleString('ru-RU', { weekday: 'long' })}</div>
+      `;
 
-    const taskList = document.createElement('ul');
-    taskList.classList.add('tasks-list');
-    dayEl.appendChild(dayHeader);
-    dayEl.appendChild(taskList);
+      const taskList = document.createElement('ul');
+      taskList.classList.add('tasks-list');
+      dayEl.appendChild(dayHeader);
+      dayEl.appendChild(taskList);
 
-    const addTaskBtn = document.createElement('button');
-    addTaskBtn.classList.add('add-task-btn');
-    addTaskBtn.innerHTML = '<img src="images/plus.svg" class="plus-button"> Добавить задачу';
-    addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
+      const addTaskBtn = document.createElement('button');
+      addTaskBtn.classList.add('add-task-btn');
+      addTaskBtn.innerHTML = '<img src="images/plus.svg" class="plus-button"> Добавить задачу';
+      addTaskBtn.onclick = () => openTaskModal(dayEl.dataset.date);
 
-    dayEl.appendChild(addTaskBtn);
-    calendarEl.appendChild(dayEl);
+      dayEl.appendChild(addTaskBtn);
+      calendarEl.appendChild(dayEl);
 
-    subscribeToTasks(dayStr, taskList);
+      subscribeToTasks(dayStr, taskList);
+    }
+  } catch (error) {
+    console.error("Ошибка при создании календаря:", error);
   }
 }
 
@@ -258,18 +205,68 @@ function subscribeToTasks(date, tasksListEl) {
     });
 }
 
-// Изменение состояния задачи (выполнена/не выполнена)
-function toggleTaskCompletion(taskId, completed, taskItemEl) {
-  db.collection('tasks').doc(taskId).update({
-    completed
-  }).then(() => {
+// Завершение задачи
+async function toggleTaskCompletion(taskId, completed, taskItemEl) {
+  try {
+    await db.collection('tasks').doc(taskId).update({ completed });
     taskItemEl.classList.toggle('done', completed);
-  });
+  } catch (error) {
+    alert(`Ошибка при обновлении задачи: ${error.message}`);
+  }
 }
 
-// Выход из системы
+// Сохранение изменений задачи
+saveTaskButton.onclick = async () => {
+  const newTaskText = editTaskInput.value.trim();
+  if (newTaskText === '') return;
+
+  try {
+    await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
+    editTaskModal.classList.remove('show');
+  } catch (error) {
+    alert(`Ошибка при сохранении задачи: ${error.message}`);
+  }
+};
+
+// Удаление задачи из окна просмотра задачи
+deleteFromViewButton.onclick = async () => {
+  if (selectedTaskId) {
+    try {
+      await db.collection('tasks').doc(selectedTaskId).delete();
+      viewTaskModal.classList.remove('show');
+    } catch (error) {
+      alert(`Ошибка при удалении задачи: ${error.message}`);
+    }
+  }
+};
+
+// Выход из аккаунта
 logoutButton.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = 'login.html';
   });
 };
+
+// Авторизация через Firebase и Telegram
+function signUpWithTelegram(telegramUser) {
+  const userId = telegramUser.id;
+  const userEmail = telegramUser.email || `${userId}@telegram.com`;
+
+  auth.createUserWithEmailAndPassword(userEmail, userId).then(userCredential => {
+    console.log('Пользователь зарегистрирован через Telegram:', userCredential);
+    createCalendar(); // Инициализация календаря
+  }).catch(error => {
+    console.error("Ошибка при регистрации через Telegram:", error);
+  });
+}
+
+// Проверка состояния авторизации
+auth.onAuthStateChanged(user => {
+  if (user) {
+    console.log("Пользователь авторизован:", user.email);
+    createCalendar();
+  } else {
+    console.log("Пользователь не авторизован");
+    window.location.href = 'login.html';
+  }
+});
