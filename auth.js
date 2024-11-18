@@ -24,13 +24,13 @@ async function handleTelegramAuth() {
     const isLoginPage = window.location.pathname.endsWith('login.html');
 
     alert("Инициализация Telegram Mini App...");
-    alert("Telegram Init Data:", tg.initDataUnsafe);
+    alert("Telegram Init Data:" + tg.initDataUnsafe);
 
     // Проверяем, доступны ли данные пользователя через Telegram Mini App
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
 
-        alert("Данные пользователя Telegram:", user);
+        alert("Данные пользователя Telegram:" + user);
 
         if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
             alert("Telegram user.id отсутствует.");
@@ -43,7 +43,7 @@ async function handleTelegramAuth() {
         const password = String(user.username);
 
         if (!/^\S+@\S+\.\S+$/.test(email)) {
-            console.error("Некорректный email:", email);
+            alert("Некорректный email:" + email);
             alert("Ошибка авторизации: некорректный email.");
             return;
         }
@@ -54,9 +54,9 @@ async function handleTelegramAuth() {
             alert('Вход выполнен успешно через Telegram');
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (error) {
-            alert('Ошибка при входе:', error.code, error.message); // Логируем ошибку в консоль
+            alert('Ошибка при входе:' + error.code, error.message); // Логируем ошибку в консоль
 
-            alert("Регистрация нового пользователя:", email, password);
+            alert("Регистрация нового пользователя:" + email, password);
         
             if (error.code === 'auth/user-not-found') {
                 alert('Пользователь не найден, выполняем регистрацию...');
@@ -65,7 +65,7 @@ async function handleTelegramAuth() {
                     alert('Регистрация выполнена успешно через Telegram');
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    alert('Ошибка при регистрации:', registerError.code, registerError.message);
+                    alert('Ошибка при регистрации:' + registerError.code, registerError.message);
                     alert('Ошибка при регистрации: ' + registerError.message);
                 }
             } else {
