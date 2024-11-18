@@ -33,41 +33,49 @@ async function handleTelegramAuth() {
         const email = `${userId}@example.com`; // Генерируем email
         const password = `TgPass_${userId}_2024`; // Генерируем пароль
 
-        alert(email)
-        alert(password)
+        console.log("Сформированные данные для Firebase:", { email, password });
 
-        // Пытаемся выполнить вход
         try {
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-            alert("Успешный вход через Telegram.");
+            // Попытка входа
+            const loginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
+            alert("Успешный вход через Telegram:" + loginResult.user);
             window.location.href = 'index.html'; // Перенаправление на главную страницу
         } catch (loginError) {
+            alert("Ошибка входа:" + loginError);
+
             if (loginError.code === 'auth/user-not-found') {
                 alert("Пользователь не найден. Выполняем регистрацию...");
 
-                // Если пользователь не найден, выполняем регистрацию
                 try {
-                    const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    alert("Пользователь успешно зарегистрирован:", userCredential.user);
+                    // Выполняем регистрацию
+                    const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                    alert("Регистрация успешна:" + registerResult.user);
 
-                    // После регистрации сразу выполняем вход
-                    await firebase.auth().signInWithEmailAndPassword(email, password);
-                    alert("Вход после регистрации выполнен успешно.");
+                    // Выполняем вход после регистрации
+                    const newLoginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
+                    alert("Вход после регистрации успешен:" + newLoginResult.user);
                     window.location.href = 'index.html'; // Перенаправление на главную страницу
                 } catch (registerError) {
-                    console.error("Ошибка регистрации через Telegram:", registerError);
+                    alert("Ошибка при регистрации:" + registerError);
                     alert("Ошибка регистрации: " + registerError.message);
+
+                    if (registerError.code === 'auth/invalid-email') {
+                        alert("Некорректный email:" + email);
+                    }
+                    if (registerError.code === 'auth/weak-password') {
+                        alert("Пароль не соответствует требованиям:" + password);
+                    }
                 }
             } else {
-                console.error("Ошибка входа через Telegram:", loginError);
                 alert("Ошибка входа: " + loginError.message);
             }
         }
     } catch (generalError) {
-        console.error("Общая ошибка авторизации через Telegram:", generalError);
+        alert("Общая ошибка авторизации через Telegram:" + generalError);
         alert("Ошибка: " + generalError.message);
     }
 }
+
 
 // Обработка DOM загрузки
 document.addEventListener('DOMContentLoaded', () => {
