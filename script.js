@@ -14,17 +14,78 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
 // Ожидаем, что Telegram WebApp SDK будет загружен
 window.onload = () => {
   const tg = window.Telegram.WebApp;
   tg.ready(); // Указывает, что SDK готово к использованию
-
-  // Пример работы с SDK
   console.log("Telegram Web App is ready!");
 };
 
+// Получение данных пользователя из Telegram WebApp
+function getTelegramUserData() {
+  const tg = window.Telegram.WebApp;
+  const userData = tg.initData;
+  const userId = tg.initDataUnsafe.user.id;
+  const firstName = tg.initDataUnsafe.user.first_name;
+  const lastName = tg.initDataUnsafe.user.last_name;
+  const username = tg.initDataUnsafe.user.username;
+  const photoUrl = tg.initDataUnsafe.user.photo_url;
 
+  console.log("Telegram User Data:", userData);
+  return { userId, firstName, lastName, username, photoUrl };
+}
+
+// Авторизация через Firebase или Telegram
+async function signUpWithTelegram() {
+  const userData = getTelegramUserData();
+  const email = `${userData.username}@telegram.com`; // Пример использования username в качестве email
+
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, "defaultPassword");
+    const user = userCredential.user;
+
+    // Сохраняем информацию о пользователе в Firestore
+    await db.collection('users').doc(user.uid).set({
+      telegramId: userData.userId,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      username: userData.username,
+      photoUrl: userData.photoUrl,
+    });
+
+    console.log("User created with Telegram:", user);
+  } catch (error) {
+    console.error("Error during sign-up:", error);
+  }
+}
+
+async function signInWithTelegram() {
+  const userData = getTelegramUserData();
+  const email = `${userData.username}@telegram.com`; // Пример использования username в качестве email
+
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, "defaultPassword");
+    const user = userCredential.user;
+    console.log("User signed in with Telegram:", user);
+  } catch (error) {
+    console.error("Error during sign-in:", error);
+  }
+}
+
+// Переход от Firebase аутентификации к Telegram
+auth.onAuthStateChanged(user => {
+  if (user) {
+    createCalendar(); // Инициализация календаря
+  } else {
+    if (window.Telegram.WebApp.initData) {
+      signInWithTelegram(); // Вход через Telegram Mini App
+    } else {
+      window.location.href = "login.html"; // Обычный вход через Firebase
+    }
+  }
+});
+
+// Календарь и задачи
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
@@ -38,7 +99,6 @@ const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
 const saveTaskButton = document.getElementById('saveTaskButton');
 const deleteFromViewButton = document.getElementById('deleteFromViewButton');
-
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -198,62 +258,18 @@ function subscribeToTasks(date, tasksListEl) {
     });
 }
 
-// Завершение задачи
-async function toggleTaskCompletion(taskId, completed, taskItemEl) {
-  try {
-    await db.collection('tasks').doc(taskId).update({ completed });
+// Изменение состояния задачи (выполнена/не выполнена)
+function toggleTaskCompletion(taskId, completed, taskItemEl) {
+  db.collection('tasks').doc(taskId).update({
+    completed
+  }).then(() => {
     taskItemEl.classList.toggle('done', completed);
-  } catch (error) {
-    alert(`Ошибка при обновлении задачи: ${error.message}`);
-  }
+  });
 }
 
-// Сохранение изменений задачи
-saveTaskButton.onclick = async () => {
-  const newTaskText = editTaskInput.value.trim();
-  if (newTaskText === '') return;
-
-  try {
-    await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
-    editTaskModal.classList.remove('show');
-  } catch (error) {
-    alert(`Ошибка при сохранении задачи: ${error.message}`);
-  }
-};
-
-// Удаление задачи из окна просмотра задачи
-deleteFromViewButton.onclick = async () => {
-  if (selectedTaskId) {
-    try {
-      await db.collection('tasks').doc(selectedTaskId).delete();
-      viewTaskModal.classList.remove('show');
-    } catch (error) {
-      alert(`Ошибка при удалении задачи: ${error.message}`);
-    }
-  }
-};
-
-
-// Выход из аккаунта
+// Выход из системы
 logoutButton.onclick = () => {
-  auth.signOut();
-};
-
-// Отображение почты аакаунта
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById('userEmail').textContent = user.email;
-    createCalendar(); // Инициализация календаря
-  } else {
-    window.location.href = "login.html";
-  }
-});
-
-// Инициализация
-auth.onAuthStateChanged(user => {
-  if (user) {
-    createCalendar();
-  } else {
+  auth.signOut().then(() => {
     window.location.href = 'login.html';
-  }
-});
+  });
+};
