@@ -24,93 +24,46 @@ window.onload = () => {
   const userData = tg.initDataUnsafe;
   if (userData && userData.user) {
     const telegramUser = userData.user;
-    signUpWithTelegram(telegramUser);
+    signUpOrLoginWithTelegram(telegramUser);
   }
 };
 
-// Модальные окна
-const calendarEl = document.getElementById('calendar');
-const taskModal = document.getElementById('taskModal');
-const taskInput = document.getElementById('taskInput');
-const addTaskButton = document.getElementById('addTaskButton');
-const closeBtns = document.querySelectorAll('.close-btn');
-const logoutButton = document.getElementById('logoutButton');
-const viewTaskModal = document.getElementById('viewTaskModal');
-const viewTaskText = document.getElementById('viewTaskText');
-const editFromViewButton = document.getElementById('editFromViewButton');
-const editTaskModal = document.getElementById('editTaskModal');
-const editTaskInput = document.getElementById('editTaskInput');
-const saveTaskButton = document.getElementById('saveTaskButton');
-const deleteFromViewButton = document.getElementById('deleteFromViewButton');
+// Функция авторизации или регистрации через Telegram
+function signUpOrLoginWithTelegram(telegramUser) {
+  const userId = telegramUser.id;
+  const userEmail = `${userId}@telegram.com`; // Уникальный email для пользователя Telegram
 
-let selectedDate = null;
-let selectedTaskId = null;
+  // Проверим, есть ли уже такой пользователь в Firebase
+  const userRef = db.collection('users').doc(userEmail);
 
-// Открытие модального окна добавления задачи
-function openTaskModal(date) {
-  selectedDate = date;
-  taskModal.classList.add('show');
-  taskInput.value = '';
-  taskInput.focus();
+  userRef.get().then(docSnapshot => {
+    if (docSnapshot.exists) {
+      // Пользователь существует, выполняем вход
+      auth.signInWithEmailAndPassword(userEmail, userId).then(() => {
+        console.log('Пользователь вошел через Telegram');
+        createCalendar();
+      }).catch(error => {
+        console.error("Ошибка при входе:", error);
+      });
+    } else {
+      // Если пользователя нет, создаём нового
+      auth.createUserWithEmailAndPassword(userEmail, userId).then(() => {
+        console.log('Пользователь зарегистрирован через Telegram');
+        createCalendar();
+      }).catch(error => {
+        console.error("Ошибка при регистрации:", error);
+      });
+      // Сохраняем пользователя в базе данных
+      userRef.set({
+        userId: userId,
+        email: userEmail,
+        name: telegramUser.username || "Без имени"
+      });
+    }
+  }).catch(error => {
+    console.error("Ошибка при получении данных пользователя:", error);
+  });
 }
-
-// Открытие модального окна просмотра задачи
-function openViewTaskModal(taskId, taskText) {
-  selectedTaskId = taskId;
-  viewTaskText.textContent = taskText;
-  viewTaskModal.classList.add('show');
-}
-
-// Закрытие всех модальных окон
-function closeModal() {
-  taskModal.classList.remove('show');
-  editTaskModal.classList.remove('show');
-  viewTaskModal.classList.remove('show');
-}
-
-// Обработчик для кнопок закрытия
-closeBtns.forEach(btn => {
-  btn.onclick = closeModal;
-});
-
-// Переход от просмотра задачи к её редактированию
-editFromViewButton.onclick = () => {
-  viewTaskModal.classList.remove('show');
-  editTaskModal.classList.add('show');
-  editTaskInput.value = viewTaskText.textContent;
-  editTaskInput.focus();
-};
-
-// Универсальный обработчик для клика вне модальных окон
-window.onclick = (event) => {
-  if (event.target === taskModal) taskModal.classList.remove('show');
-  if (event.target === editTaskModal) editTaskModal.classList.remove('show');
-  if (event.target === viewTaskModal) viewTaskModal.classList.remove('show');
-};
-
-// Закрытие модальных окон при нажатии клавиши Esc
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeModal();
-});
-
-// Добавление задачи
-addTaskButton.onclick = async () => {
-  const task = taskInput.value.trim();
-  if (task === '') return;
-
-  const userId = auth.currentUser.uid;
-
-  const taskData = {
-    task,
-    date: selectedDate,
-    completed: false,
-    userId
-  };
-
-  await db.collection('tasks').add(taskData);
-  taskInput.value = '';
-  closeModal();
-};
 
 // Создание календаря
 function createCalendar() {
@@ -246,19 +199,6 @@ logoutButton.onclick = () => {
     window.location.href = 'login.html';
   });
 };
-
-// Авторизация через Firebase и Telegram
-function signUpWithTelegram(telegramUser) {
-  const userId = telegramUser.id;
-  const userEmail = telegramUser.email || `${userId}@telegram.com`;
-
-  auth.createUserWithEmailAndPassword(userEmail, userId).then(userCredential => {
-    console.log('Пользователь зарегистрирован через Telegram:', userCredential);
-    createCalendar(); // Инициализация календаря
-  }).catch(error => {
-    console.error("Ошибка при регистрации через Telegram:", error);
-  });
-}
 
 // Проверка состояния авторизации
 auth.onAuthStateChanged(user => {
