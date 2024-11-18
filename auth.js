@@ -42,6 +42,12 @@ async function handleTelegramAuth() {
         const email = `${user.id}@telegram.com`;
         const password = String(user.id);
 
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            console.error("Некорректный email:", email);
+            alert("Ошибка авторизации: некорректный email.");
+            return;
+        }
+
         try {
             // Проверяем, существует ли пользователь
             await firebase.auth().signInWithEmailAndPassword(email, password);
