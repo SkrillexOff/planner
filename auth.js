@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем, доступен ли Telegram WebApp SDK
     if (window.Telegram && Telegram.WebApp) {
         const tg = Telegram.WebApp;
-        const user = tg.initDataUnsafe.user;
+        const user = tg.initData.user;
 
         alert (tg)
         alert (user)
