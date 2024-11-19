@@ -32,7 +32,7 @@ async function handleTelegramAuth() {
         const userId = String(initData.user.id); // Преобразуем userId в строку
         const username = initData.user.username || `user${userId}`; // Если username отсутствует, используем "user{userId}"
         const email = `${userId}@example.com`;
-        const password = username;
+        const password = userId;
 
         alert(email)
         alert(password)
