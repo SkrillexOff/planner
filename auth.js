@@ -16,12 +16,20 @@ if (!firebase.apps.length) {
     firebase.app(); // если Firebase уже инициализирован
 }
 
-// Telegram Mini App авторизация
-document.addEventListener('DOMContentLoaded', async () => {
-    // Проверяем, доступен ли Telegram WebApp SDK
-    if (window.Telegram && Telegram.WebApp) {
-        const tg = Telegram.WebApp;
-        const user = tg.initData.user;
+// Проверка и настройка Telegram Mini App авторизации
+async function handleTelegramAuth() {
+    const tg = window.Telegram.WebApp;
+    tg.ready(); // Устанавливаем, что SDK готово к использованию
+
+    const isLoginPage = window.location.pathname.endsWith('login.html');
+
+    alert("Инициализация Telegram Mini App...");
+    alert("Telegram Init Data:" + tg.initDataUnsafe);
+
+    // Проверяем, доступны ли данные пользователя через Telegram Mini App
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+
 
         alert (tg)
         alert (user)
