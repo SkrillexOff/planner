@@ -29,9 +29,9 @@ async function handleTelegramAuth() {
             return;
         }
 
-        const userId = String(telegramData.user.id); // Преобразуем user.id в строку
-        const email = `${userId}@example.com`; // Генерируем email
-        const password = `TgPass_${userId}_2024`; // Генерируем пароль
+        const userId = String(telegramData.user.username); // Преобразуем user.id в строку
+        const email = '${userId}@gmail.com'; // Генерируем email
+        const password = '${userId}'; // Генерируем пароль
 
         alert(email)
         alert(password)
