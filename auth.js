@@ -29,33 +29,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             const email = `${username}@gmail.com`; // Генерация email
             const password = userId; // Используем userId как пароль
 
-            alert(email)
-            alert(password)
-
             try {
                 // Попробуем войти в Firebase
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                alert('Пользователь успешно вошел через Telegram');
+                console.log('Пользователь успешно вошел через Telegram');
+                alert('Вход через Telegram выполнен успешно!');
+                window.location.href = 'index.html'; // Перенаправление на главную страницу
             } catch (error) {
                 if (error.code === 'auth/user-not-found') {
                     // Если пользователя нет, регистрируем его
                     try {
                         await firebase.auth().createUserWithEmailAndPassword(email, password);
-                        alert('Пользователь зарегистрирован через Telegram');
+                        console.log('Пользователь зарегистрирован через Telegram');
+                        alert('Регистрация через Telegram выполнена успешно!');
+                        window.location.href = 'index.html'; // Перенаправление на главную страницу
                     } catch (regError) {
                         console.error('Ошибка при регистрации через Telegram:', regError.message);
                         alert('Ошибка при регистрации через Telegram: ' + regError.message);
-                        return;
                     }
                 } else {
                     console.error('Ошибка при входе через Telegram:', error.message);
                     alert('Ошибка при входе через Telegram: ' + error.message);
-                    return;
                 }
             }
-
-            // Перенаправляем на главную страницу после успешной авторизации
-            window.location.href = 'index.html';
         } else {
             console.error('Не удалось получить данные пользователя Telegram.');
             alert('Не удалось авторизоваться через Telegram.');
