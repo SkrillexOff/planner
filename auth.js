@@ -20,42 +20,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
-    // Проверка, есть ли Mini App SDK
+    // Telegram Mini App обработка
     if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
         const initData = Telegram.WebApp.initDataUnsafe;
 
         if (initData && initData.user) {
             const userId = String(initData.user.id); // Преобразуем userId в строку
-            const username = initData.user.username || 'default_username'; // Если нет username, задаём дефолтное значение
+            const username = initData.user.username || `user${userId}`; // Если username отсутствует, используем "user{userId}"
             const email = `${userId}@example.com`;
             const password = username;
 
             try {
-                // Попробуем войти, если пользователь уже существует
+                alert('Попытка входа с email:' + email);
+                // Попытка входа в Firebase
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                alert('Вход выполнен через Telegram Mini App');
+                alert('Вход выполнен успешно через Telegram Mini App');
             } catch (error) {
-                // Если пользователь не найден, создаём нового
                 if (error.code === 'auth/user-not-found') {
+                    alert('Пользователь не найден. Регистрация нового пользователя с email:' + email);
                     try {
+                        // Регистрация нового пользователя
                         await firebase.auth().createUserWithEmailAndPassword(email, password);
                         alert('Пользователь успешно зарегистрирован через Telegram Mini App');
                     } catch (registerError) {
-                        console.error('Ошибка регистрации через Telegram:', registerError.message);
-                        alert('Не удалось зарегистрироваться через Telegram');
+                        console.error('Ошибка регистрации пользователя через Telegram:', registerError.message);
+                        alert('Ошибка регистрации:' + registerError.message);
+                        return;
                     }
                 } else {
+                    console.error('Ошибка входа через Telegram:', error.message);
                     alert('Ошибка входа через Telegram:' + error.message);
+                    return;
                 }
             }
 
-            // После успешного входа или регистрации перенаправляем на главную страницу
+            // После успешного входа или регистрации
             window.location.href = 'index.html';
             return;
+        } else {
+            console.error('Данные пользователя из Telegram недоступны.');
+            alert('Ошибка: Telegram не передал данные пользователя.');
         }
     }
 
-    // Обработчики форм
+    // Обработчики форм для стандартной авторизации
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
