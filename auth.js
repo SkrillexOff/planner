@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const email = `${username}@baza.pw`; // Генерация email
             const password = userId; // Используем userId как пароль
 
+            alert(email)
+            alert(password)
+
             try {
                 // Попробуем войти в Firebase
                 await firebase.auth().signInWithEmailAndPassword(email, password);
