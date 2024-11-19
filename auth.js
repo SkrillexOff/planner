@@ -16,69 +16,59 @@ if (!firebase.apps.length) {
     firebase.app(); // если Firebase уже инициализирован
 }
 
-// Проверка и настройка Telegram Mini App авторизации
+// Функция для обработки авторизации через Telegram
 async function handleTelegramAuth() {
-    const tg = window.Telegram.WebApp;
-    tg.ready(); // Устанавливаем, что SDK готово к использованию
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        const initDataUnsafe = tg.initDataUnsafe;
 
-    const isLoginPage = window.location.pathname.endsWith('login.html');
-
-    alert("Инициализация Telegram Mini App...");
-    alert("Telegram Init Data:" + tg.initDataUnsafe);
-
-    // Проверяем, доступны ли данные пользователя через Telegram Mini App
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-
-
-        alert (tg)
-        alert (user)
-
-        if (user) {
+        if (initDataUnsafe && initDataUnsafe.user) {
+            const user = initDataUnsafe.user;
             const userId = String(user.id);
-            const username = user.username || `user${userId}`;
-            const email = `${username}@baza.pw`; // Генерация email
-            const password = userId; // Используем userId как пароль
+            const email = `${userId}@example.com`;
+            const password = username;
 
             alert(email)
             alert(password)
 
             try {
-                // Попробуем войти в Firebase
+                // Попытка входа с использованием email и пароля
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                alert('Пользователь успешно вошел через Telegram');
+                console.log('Вход выполнен через Telegram');
             } catch (error) {
-                if (error.code === 'auth/invalid-login-credentials') {
-                    // Если пользователя нет, регистрируем его
+                if (error.code === 'auth/user-not-found') {
+                    // Регистрация нового пользователя, если он не найден
                     try {
                         await firebase.auth().createUserWithEmailAndPassword(email, password);
                         console.log('Пользователь зарегистрирован через Telegram');
                     } catch (regError) {
-                        console.error('Ошибка при регистрации через Telegram:', regError.message);
-                        alert('Ошибка при регистрации через Telegram: ' + regError.message);
+                        console.error('Ошибка регистрации через Telegram:', regError.message);
+                        alert('Ошибка регистрации через Telegram: ' + regError.message);
                         return;
                     }
                 } else {
-                    console.error('Ошибка при входе через Telegram:', error.message);
-                    alert('Ошибка при входе через Telegram: ' + error.message);
+                    console.error('Ошибка входа через Telegram:', error.message);
+                    alert('Ошибка входа через Telegram: ' + error.message);
                     return;
                 }
             }
 
-            // Перенаправляем на главную страницу после успешной авторизации
+            // Перенаправление на главную страницу
             window.location.href = 'index.html';
         } else {
-            console.error('Не удалось получить данные пользователя Telegram.');
-            alert('Не удалось авторизоваться через Telegram.');
+            alert('Ошибка: данные Telegram недоступны.');
         }
     } else {
-        console.error('Telegram WebApp SDK не найден.');
-        alert('Это приложение должно запускаться через Telegram.');
+        alert('Telegram WebApp SDK не найден.');
     }
-};
+}
 
-// Обычная авторизация через формы (если Telegram недоступен)
+// Запуск обработчика авторизации при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.Telegram && window.Telegram.WebApp) {
+        handleTelegramAuth();
+    }
+
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
