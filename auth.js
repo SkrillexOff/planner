@@ -33,19 +33,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // Попробуем войти, если пользователь уже существует
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                console.log('Вход выполнен через Telegram Mini App');
+                alert('Вход выполнен через Telegram Mini App');
             } catch (error) {
                 // Если пользователь не найден, создаём нового
                 if (error.code === 'auth/user-not-found') {
                     try {
                         await firebase.auth().createUserWithEmailAndPassword(email, password);
-                        console.log('Пользователь успешно зарегистрирован через Telegram Mini App');
+                        alert('Пользователь успешно зарегистрирован через Telegram Mini App');
                     } catch (registerError) {
                         console.error('Ошибка регистрации через Telegram:', registerError.message);
                         alert('Не удалось зарегистрироваться через Telegram');
                     }
                 } else {
-                    console.error('Ошибка входа через Telegram:', error.message);
+                    alert('Ошибка входа через Telegram:' + error.message);
                 }
             }
 
