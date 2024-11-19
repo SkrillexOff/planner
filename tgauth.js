@@ -25,6 +25,7 @@ async function handleTelegramAuth() {
     console.log("Telegram Init Data Unsafe:", tg.initDataUnsafe);
 
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
+        window.location.href = 'login.html';
         console.warn("Telegram данные пользователя недоступны.");
         alert("Откройте приложение через Telegram Mini App.");
         return;
