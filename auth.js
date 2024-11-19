@@ -22,16 +22,17 @@ async function handleTelegramAuth() {
         const telegramData = window.Telegram.WebApp.initDataUnsafe;
 
         // Проверяем данные Telegram
-        if (!telegramData || !telegramData.user || !telegramData.user.id) {
+        if (!telegramData || !telegramData.user || !telegramData.user.username || !telegramData.user.id) {
             alert("Telegram данные отсутствуют или некорректны.");
             alert("Проблема с инициализацией Telegram Mini App.");
             window.location.href = 'login.html';
             return;
         }
 
-        const userId = String(telegramData.user.username); // Преобразуем user.id в строку
-        const email = '${userId}@gmail.com'; // Генерируем email
-        const password = '${userId}'; // Генерируем пароль
+        const userId = String(initData.user.id); // Преобразуем userId в строку
+        const username = initData.user.username || `user${userId}`; // Если username отсутствует, используем "user{userId}"
+        const email = `${userId}@example.com`;
+        const password = username;
 
         alert(email)
         alert(password)
