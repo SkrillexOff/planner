@@ -75,7 +75,7 @@ async function handleTelegramAuth() {
         console.error('Telegram WebApp SDK не найден.');
         alert('Это приложение должно запускаться через Telegram.');
     }
-});
+};
 
 // Обычная авторизация через формы (если Telegram недоступен)
 document.addEventListener('DOMContentLoaded', () => {
