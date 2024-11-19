@@ -16,78 +16,46 @@ if (!firebase.apps.length) {
     firebase.app(); // если Firebase уже инициализирован
 }
 
-// Функция для обработки авторизации через Telegram
-async function handleTelegramAuth() {
-    try {
-        const telegramData = window.Telegram.WebApp.initDataUnsafe;
-
-        // Проверяем данные Telegram
-        if (!telegramData || !telegramData.user || !telegramData.user.id) {
-            alert("Telegram данные отсутствуют или некорректны.");
-            window.location.href = 'login.html';
-            return;
-        }
-
-        const userId = String(telegramData.user.id); // Преобразуем user.id в строку
-        const email = `${userId}@example.com`; // Генерируем email
-        const password = `tgpass${userId}2024`; // Генерируем пароль
-
-        alert(email);
-        alert(password);
-
-        try {
-            const loginResult = await firebase.auth().signInWithEmailAndPassword(email, password);
-            alert("Успешный вход через Telegram:" + loginResult.user);
-            window.location.href = 'index.html'; // Перенаправление на главную страницу
-        } catch (loginError) {
-            alert("Ошибка входа:" + loginError); // Логируем ошибку входа для дальнейшего анализа
-        
-            if (loginError.code === 'auth/user-not-found') {
-                alert("Пользователь не найден. Выполняем регистрацию...");
-        
-                // Регистрация нового пользователя
-                try {
-                    const registerResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    alert("Регистрация успешна:" + registerResult.user);
-        
-                    // Вход после успешной регистрации
-                    await firebase.auth().signInWithEmailAndPassword(email, password);
-                    alert("Вход после регистрации выполнен успешно.");
-                    window.location.href = 'index.html'; // Перенаправление на главную страницу
-                } catch (registerError) {
-                    console.log("Ошибка при регистрации:", registerError); // Логируем подробности ошибки регистрации
-                    alert("Ошибка регистрации: " + registerError.message);
-                    if (registerError.code) {
-                        alert("Код ошибки: " + registerError.code); // Показываем код ошибки
-                    }
-                    if (registerError.stack) {
-                        console.log("Стек ошибки:", registerError.stack); // Логируем стек ошибки для дополнительного анализа
-                    }
-                }
-            } else {
-                alert("Ошибка входа: " + loginError.message);
-            }
-        }        
-    } catch (generalError) {
-        console.error("Общая ошибка авторизации через Telegram:", generalError);
-        alert("Ошибка: " + generalError.message);
-    }
-}
-
-
-
-// Обработка DOM загрузки
-document.addEventListener('DOMContentLoaded', () => {
-    // Если приложение открыто через Telegram Mini App
-    if (window.Telegram && window.Telegram.WebApp) {
-        handleTelegramAuth();
-        return; // Telegram-логика выполнена, остальной код не нужен
-    }
-
-    // Обработка стандартной авторизации и регистрации
+document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
+    // Проверка, есть ли Mini App SDK
+    if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
+        const initData = Telegram.WebApp.initDataUnsafe;
+
+        if (initData && initData.user) {
+            const userId = String(initData.user.id); // Преобразуем userId в строку
+            const username = initData.user.username || 'default_username'; // Если нет username, задаём дефолтное значение
+            const email = `${userId}@example.com`;
+            const password = username;
+
+            try {
+                // Попробуем войти, если пользователь уже существует
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                console.log('Вход выполнен через Telegram Mini App');
+            } catch (error) {
+                // Если пользователь не найден, создаём нового
+                if (error.code === 'auth/user-not-found') {
+                    try {
+                        await firebase.auth().createUserWithEmailAndPassword(email, password);
+                        console.log('Пользователь успешно зарегистрирован через Telegram Mini App');
+                    } catch (registerError) {
+                        console.error('Ошибка регистрации через Telegram:', registerError.message);
+                        alert('Не удалось зарегистрироваться через Telegram');
+                    }
+                } else {
+                    console.error('Ошибка входа через Telegram:', error.message);
+                }
+            }
+
+            // После успешного входа или регистрации перенаправляем на главную страницу
+            window.location.href = 'index.html';
+            return;
+        }
+    }
+
+    // Обработчики форм
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
