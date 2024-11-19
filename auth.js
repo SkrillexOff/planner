@@ -16,59 +16,49 @@ if (!firebase.apps.length) {
     firebase.app(); // если Firebase уже инициализирован
 }
 
-// Функция для обработки авторизации через Telegram
-async function handleTelegramAuth() {
-    if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
+// Функция авторизации через Telegram
+async function telegramAuth() {
+    if (window.Telegram && Telegram.WebApp) {
+        const tg = Telegram.WebApp;
         const initDataUnsafe = tg.initDataUnsafe;
 
         if (initDataUnsafe && initDataUnsafe.user) {
-            const user = initDataUnsafe.user;
-            const userId = String(user.id);
+            const userId = String(initDataUnsafe.user.id);
+            const username = initDataUnsafe.user.username || `user${userId}`;
             const email = `${userId}@example.com`;
             const password = username;
 
-            alert(email)
-            alert(password)
-
             try {
-                // Попытка входа с использованием email и пароля
+                // Проверяем, существует ли пользователь
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                console.log('Вход выполнен через Telegram');
+                console.log('Вход выполнен успешно через Telegram!');
             } catch (error) {
                 if (error.code === 'auth/user-not-found') {
-                    // Регистрация нового пользователя, если он не найден
+                    // Если пользователя нет, создаём нового
                     try {
                         await firebase.auth().createUserWithEmailAndPassword(email, password);
-                        console.log('Пользователь зарегистрирован через Telegram');
-                    } catch (regError) {
-                        console.error('Ошибка регистрации через Telegram:', regError.message);
-                        alert('Ошибка регистрации через Telegram: ' + regError.message);
+                        console.log('Регистрация прошла успешно через Telegram!');
+                    } catch (registerError) {
+                        console.error('Ошибка при регистрации:', registerError.message);
                         return;
                     }
                 } else {
-                    console.error('Ошибка входа через Telegram:', error.message);
-                    alert('Ошибка входа через Telegram: ' + error.message);
+                    console.error('Ошибка при входе:', error.message);
                     return;
                 }
             }
 
-            // Перенаправление на главную страницу
+            // Перенаправляем на главную страницу
             window.location.href = 'index.html';
         } else {
-            alert('Ошибка: данные Telegram недоступны.');
+            console.error('Не удалось получить данные пользователя из Telegram.');
         }
     } else {
-        alert('Telegram WebApp SDK не найден.');
+        console.error('Telegram WebApp SDK недоступен.');
     }
 }
 
-// Запуск обработчика авторизации при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.Telegram && window.Telegram.WebApp) {
-        handleTelegramAuth();
-    }
-
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
@@ -103,4 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Автоматическая авторизация через Telegram при загрузке страницы
+    telegramAuth();
 });
