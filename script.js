@@ -235,7 +235,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById('userEmail').textContent = user.email;
     createCalendar(); // Инициализация календаря
   } else {
-    window.location.href = "telegram.html";
+    window.location.href = "login.html";
   }
 });
 
@@ -244,6 +244,6 @@ auth.onAuthStateChanged(user => {
   if (user) {
     createCalendar();
   } else {
-    window.location.href = 'telegram.html';
+    window.location.href = 'login.html';
   }
 });
