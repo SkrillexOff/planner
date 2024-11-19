@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (user) {
             const userId = String(user.id);
             const username = user.username || `user${userId}`;
-            const email = `${username}@example.com`; // Генерация email
+            const email = `${username}@baza.pw`; // Генерация email
             const password = userId; // Используем userId как пароль
 
             alert(email)
