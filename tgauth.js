@@ -40,7 +40,7 @@ async function handleTelegramAuth() {
     const currentUser = firebase.auth().currentUser;
     if (currentUser) {
         console.log("Пользователь уже аутентифицирован:", currentUser.email);
-        window.location.href = 'index.html'; // Перенаправление на главную страницу
+        window.location.href = 'tgindex.html'; // Перенаправление на главную страницу
         return;
     }
 
@@ -48,7 +48,7 @@ async function handleTelegramAuth() {
         // Попытка входа
         await firebase.auth().signInWithEmailAndPassword(email, password);
         console.log("Вход выполнен успешно");
-        window.location.href = 'index.html'; // Перенаправление на главную страницу
+        window.location.href = 'tgindex.html'; // Перенаправление на главную страницу
     } catch (error) {
         console.error("Ошибка при входе:", error.code, error.message);
 
@@ -59,7 +59,7 @@ async function handleTelegramAuth() {
                 await firebase.auth().createUserWithEmailAndPassword(email, password);
                 console.log("Регистрация выполнена успешно");
                 // После регистрации перенаправляем
-                window.location.href = 'index.html';
+                window.location.href = 'tgindex.html';
             } catch (registerError) {
                 console.error("Ошибка регистрации:", registerError.code, registerError.message);
                 alert("Ошибка регистрации: " + registerError.message);
