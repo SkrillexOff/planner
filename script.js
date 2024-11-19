@@ -14,21 +14,23 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
+// Элементы DOM
 const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
+const descriptionInput = document.getElementById('descriptionInput');
 const addTaskButton = document.getElementById('addTaskButton');
 const closeBtns = document.querySelectorAll('.close-btn');
 const logoutButton = document.getElementById('logoutButton');
 const viewTaskModal = document.getElementById('viewTaskModal');
 const viewTaskText = document.getElementById('viewTaskText');
+const viewTaskDescription = document.getElementById('viewTaskDescription');
 const editFromViewButton = document.getElementById('editFromViewButton');
 const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
+const editDescriptionInput = document.getElementById('editDescriptionInput');
 const saveTaskButton = document.getElementById('saveTaskButton');
 const deleteFromViewButton = document.getElementById('deleteFromViewButton');
-
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -38,13 +40,15 @@ function openTaskModal(date) {
   selectedDate = date;
   taskModal.classList.add('show');
   taskInput.value = '';
+  descriptionInput.value = '';
   taskInput.focus();
 }
 
 // Открытие модального окна просмотра задачи
-function openViewTaskModal(taskId, taskText) {
+function openViewTaskModal(taskId, taskText, taskDescription) {
   selectedTaskId = taskId;
   viewTaskText.textContent = taskText;
+  viewTaskDescription.textContent = taskDescription || 'Нет описания';
   viewTaskModal.classList.add('show');
 }
 
@@ -65,6 +69,9 @@ editFromViewButton.onclick = () => {
   viewTaskModal.classList.remove('show');
   editTaskModal.classList.add('show');
   editTaskInput.value = viewTaskText.textContent;
+  editDescriptionInput.value = viewTaskDescription.textContent !== 'Нет описания'
+    ? viewTaskDescription.textContent
+    : '';
   editTaskInput.focus();
 };
 
@@ -83,20 +90,28 @@ document.addEventListener('keydown', (event) => {
 // Добавление задачи
 addTaskButton.onclick = async () => {
   const task = taskInput.value.trim();
+  const description = descriptionInput.value.trim(); // Получение описания
+
   if (task === '') return;
 
   const userId = auth.currentUser.uid;
 
   const taskData = {
     task,
+    description, // Сохранение описания
     date: selectedDate,
     completed: false,
     userId
   };
 
-  await db.collection('tasks').add(taskData);
-  taskInput.value = '';
-  closeModal();
+  try {
+    await db.collection('tasks').add(taskData);
+    taskInput.value = '';
+    descriptionInput.value = ''; // Очистка поля описания
+    closeModal();
+  } catch (error) {
+    alert(`Ошибка при добавлении задачи: ${error.message}`);
+  }
 };
 
 // Создание календаря
@@ -161,6 +176,7 @@ function subscribeToTasks(date, tasksListEl) {
 
       snapshot.forEach(doc => {
         const taskData = doc.data();
+
         const taskItemEl = document.createElement('li');
         taskItemEl.className = 'task-item';
         taskItemEl.dataset.taskId = doc.id;
@@ -172,17 +188,29 @@ function subscribeToTasks(date, tasksListEl) {
         checkboxEl.checked = taskData.completed;
         checkboxEl.onchange = () => toggleTaskCompletion(doc.id, checkboxEl.checked, taskItemEl);
 
+        const taskElementsDiv = document.createElement('div');
+        taskElementsDiv.className = 'task-elements';
+
         const taskTextEl = document.createElement('span');
         taskTextEl.textContent = taskData.task;
 
+        const taskDescriptionEl = document.createElement('p');
+        taskDescriptionEl.className = 'task-description';
+        taskDescriptionEl.textContent = taskData.description || '';
+        if (taskData.completed) taskDescriptionEl.classList.add('done');
+
+        taskElementsDiv.appendChild(taskTextEl);
+        if (taskData.description) taskElementsDiv.appendChild(taskDescriptionEl);
+
+        taskItemEl.appendChild(checkboxEl);
+        taskItemEl.appendChild(taskElementsDiv);
+
         taskItemEl.onclick = (event) => {
           if (event.target !== checkboxEl) {
-            openViewTaskModal(doc.id, taskData.task);
+            openViewTaskModal(doc.id, taskData.task, taskData.description);
           }
         };
 
-        taskItemEl.appendChild(checkboxEl);
-        taskItemEl.appendChild(taskTextEl);
         tasksListEl.appendChild(taskItemEl);
       });
     });
@@ -201,10 +229,15 @@ async function toggleTaskCompletion(taskId, completed, taskItemEl) {
 // Сохранение изменений задачи
 saveTaskButton.onclick = async () => {
   const newTaskText = editTaskInput.value.trim();
+  const newDescription = editDescriptionInput.value.trim();
+
   if (newTaskText === '') return;
 
   try {
-    await db.collection('tasks').doc(selectedTaskId).update({ task: newTaskText });
+    await db.collection('tasks').doc(selectedTaskId).update({
+      task: newTaskText,
+      description: newDescription
+    });
     editTaskModal.classList.remove('show');
   } catch (error) {
     alert(`Ошибка при сохранении задачи: ${error.message}`);
@@ -223,25 +256,15 @@ deleteFromViewButton.onclick = async () => {
   }
 };
 
-
 // Выход из аккаунта
 logoutButton.onclick = () => {
   auth.signOut();
 };
 
-// Отображение почты аакаунта
+// Отображение текущего пользователя и инициализация календаря
 auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('userEmail').textContent = user.email;
-    createCalendar(); // Инициализация календаря
-  } else {
-    window.location.href = "login.html";
-  }
-});
-
-// Инициализация
-auth.onAuthStateChanged(user => {
-  if (user) {
     createCalendar();
   } else {
     window.location.href = 'login.html';

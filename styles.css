@@ -160,6 +160,12 @@ span {
   margin-bottom: 4px;
 }
 
+.task-elements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .task-item {
   display: flex;
   gap: 8px;
@@ -170,6 +176,11 @@ span {
 }
 
 .task-item.done span {
+  text-decoration: line-through;
+  color: #9C998E;
+}
+
+.task-description.done {
   text-decoration: line-through;
   color: #9C998E;
 }
@@ -299,7 +310,7 @@ span {
   color: #000;
 }
 
-#taskInput, #email, #password, #editTaskInput {
+#taskInput, #email, #password, #editTaskInput, #editDescriptionInput, #descriptionInput {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
@@ -461,7 +472,8 @@ span {
 #viewTaskModal p {
   font-size: 16px;
   font-weight: 500;
-  margin: 20px 0;
+  margin-top: 12px;
+  padding-bottom: 8px;
 }
 
 #viewTaskModal .btn.primary {
