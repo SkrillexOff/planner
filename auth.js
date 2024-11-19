@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 alert('Ошибка при входе: ' + error);
 
-                if (error.code === 'auth/user-not-found') {
+                if (error.code === 'auth/invalid-login-credentials') {
                     alert('Пользователь не найден, регистрируем...');
                     // Если пользователя нет, регистрируем его
                     try {
