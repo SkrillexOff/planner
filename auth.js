@@ -18,10 +18,12 @@ if (!firebase.apps.length) {
 
 // Telegram Mini App авторизация
 document.addEventListener('DOMContentLoaded', async () => {
-    // Проверяем, доступен ли Telegram WebApp SDK
-    if (window.Telegram && Telegram.WebApp) {
-        const tg = Telegram.WebApp;
-        const user = tg.initDataUnsafe.user;
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    // Проверка, есть ли Mini App SDK
+    if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
+        const initData = Telegram.WebApp.initDataUnsafe;
 
         if (user) {
             const userId = String(user.id);
