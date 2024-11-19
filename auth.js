@@ -51,7 +51,7 @@ async function handleTelegramAuth() {
     } catch (error) {
         console.error("Ошибка при входе:", error.code, error.message);
 
-        if (error.code === 'auth/user-not-found') {
+        if (error.code === 'auth/invalid-login-credentials') {
             console.log("Пользователь не найден, регистрируем нового...");
             try {
                 // Регистрация нового пользователя
