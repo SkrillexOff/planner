@@ -26,28 +26,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (user) {
             const userId = String(user.id);
             const username = user.username || `user${userId}`;
-            const email = `${username}@gmail.com`; // Генерация email
+            const email = `${username}@example.com`; // Генерация email
             const password = userId; // Используем userId как пароль
 
             alert(email)
             alert(password)
 
             try {
-                // Попробуем войти в Firebase
+                // Пробуем войти в Firebase
                 await firebase.auth().signInWithEmailAndPassword(email, password);
                 console.log('Пользователь успешно вошел через Telegram');
                 alert('Вход через Telegram выполнен успешно!');
                 window.location.href = 'index.html'; // Перенаправление на главную страницу
             } catch (error) {
+                alert('Ошибка при входе: ' + error);
+
                 if (error.code === 'auth/user-not-found') {
+                    alert('Пользователь не найден, регистрируем...');
                     // Если пользователя нет, регистрируем его
                     try {
-                        await firebase.auth().createUserWithEmailAndPassword(email, password);
-                        console.log('Пользователь зарегистрирован через Telegram');
+                        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                        console.log('Пользователь зарегистрирован:', userCredential.user);
                         alert('Регистрация через Telegram выполнена успешно!');
                         window.location.href = 'index.html'; // Перенаправление на главную страницу
                     } catch (regError) {
-                        console.error('Ошибка при регистрации через Telegram:', regError.message);
+                        console.error('Ошибка при регистрации через Telegram:', regError);
                         alert('Ошибка при регистрации через Telegram: ' + regError.message);
                     }
                 } else {
@@ -64,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Это приложение должно запускаться через Telegram.');
     }
 });
+
 
 // Обычная авторизация через формы (если Telegram недоступен)
 document.addEventListener('DOMContentLoaded', () => {
