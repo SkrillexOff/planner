@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tg = Telegram.WebApp;
         const user = tg.initDataUnsafe.user;
 
+        alert (tg)
+        alert (user)
+
         if (user) {
             const userId = String(user.id);
             const username = user.username || `user${userId}`;
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // Попробуем войти в Firebase
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                console.log('Пользователь успешно вошел через Telegram');
+                alert('Пользователь успешно вошел через Telegram');
             } catch (error) {
                 if (error.code === 'auth/invalid-login-credentials') {
                     // Если пользователя нет, регистрируем его
