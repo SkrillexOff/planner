@@ -92,11 +92,12 @@ legend {
 /* Reset and base styles  */
 
 .header {
+  background: #ffffff;
   display: block;
   position: fixed;
   width: 100%;
-  max-width: 500px;
-  z-index: 3;
+  z-index: 1;
+  border-bottom: 1px solid #d9d8d3;
 }
 
 body {
@@ -393,7 +394,7 @@ span {
 .modal {
   display: none;
   position: fixed;
-  z-index: 1;
+  z-index: 2;
   left: 0;
   top: 0;
   width: 100%;
@@ -442,15 +443,14 @@ span {
 
 /* Стили для блока с почтой пользователя */
 #userInfo {
-  background: #ffffff;
   padding: 16px;
-  border-radius: 16px;
   display: flex;
   width: 100%;
+  max-width: 500px;
+  margin: auto;
   flex-direction: row;
   gap: 4px;
   align-items: center;
-  margin-top: 20px;
   justify-content: space-between;
 }
 
