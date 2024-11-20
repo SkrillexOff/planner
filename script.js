@@ -48,7 +48,7 @@ function openTaskModal(date) {
 function openViewTaskModal(taskId, taskText, taskDescription) {
   selectedTaskId = taskId;
   viewTaskText.textContent = taskText;
-  viewTaskDescription.textContent = taskDescription || 'Нет описания';
+  viewTaskDescription.textContent = taskDescription || '-';
   viewTaskModal.classList.add('show');
 }
 
@@ -69,7 +69,7 @@ editFromViewButton.onclick = () => {
   viewTaskModal.classList.remove('show');
   editTaskModal.classList.add('show');
   editTaskInput.value = viewTaskText.textContent;
-  editDescriptionInput.value = viewTaskDescription.textContent !== 'Нет описания'
+  editDescriptionInput.value = viewTaskDescription.textContent !== '-'
     ? viewTaskDescription.textContent
     : '';
   editTaskInput.focus();
