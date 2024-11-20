@@ -93,10 +93,10 @@ legend {
 
 .header {
   display: block;
+  position: fixed;
   width: 100%;
   max-width: 500px;
-  padding-left: 16px;
-  padding-right: 16px;
+  z-index: 3;
 }
 
 body {
@@ -135,7 +135,7 @@ span {
   gap: 32px;
   width: 100%;
   max-width: 500px;
-  padding-top: 32px;
+  padding-top: 120px;
 }
 
 .calendar-day {
@@ -419,7 +419,6 @@ span {
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  margin-top: 10px;
 }
 
 #logoutButton:hover {
@@ -443,6 +442,9 @@ span {
 
 /* Стили для блока с почтой пользователя */
 #userInfo {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 16px;
   display: flex;
   width: 100%;
   flex-direction: row;
@@ -500,4 +502,10 @@ span {
 footer {
   margin-top: 56px;
   margin-bottom: 32px;
+}
+
+.user-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
