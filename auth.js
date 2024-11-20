@@ -26,7 +26,6 @@ async function handleTelegramAuth() {
 
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || !tg.initDataUnsafe.user.id) {
         console.warn("Telegram данные пользователя недоступны.");
-        alert("Откройте приложение через Telegram Mini App.");
         return;
     }
 
@@ -87,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                alert('Вход выполнен успешно!');
                 window.location.href = 'index.html'; // Перенаправление на главную страницу
             } catch (error) {
                 alert('Ошибка входа: ' + error.message);
@@ -103,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await firebase.auth().createUserWithEmailAndPassword(email, password);
-                alert('Регистрация прошла успешно!');
                 window.location.href = 'login.html'; // Перенаправление на страницу входа
             } catch (error) {
                 alert('Ошибка регистрации: ' + error.message);
