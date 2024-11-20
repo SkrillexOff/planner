@@ -23,7 +23,7 @@ a:hover  {
 
 /* Common */
 
-aside, nav, footer, header, section, main {
+aside, nav, footer, section, main {
 	display: block;
 }
 
@@ -90,6 +90,14 @@ legend {
 
 
 /* Reset and base styles  */
+
+.header {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
 
 body {
   font-family: Inter, sans-serif;
@@ -436,10 +444,12 @@ span {
 /* Стили для блока с почтой пользователя */
 #userInfo {
   display: flex;
-  flex-direction: column;
+  width: 100%;
+  flex-direction: row;
   gap: 4px;
   align-items: center;
   margin-top: 20px;
+  justify-content: space-between;
 }
 
 #userEmail {
