@@ -33,7 +33,7 @@ const editTaskInput = document.getElementById('editTaskInput');
 const editDescriptionInput = document.getElementById('editDescriptionInput');
 const toggleEditDescriptionButton = document.getElementById('toggleEditDescriptionButton');
 const saveTaskButton = document.getElementById('saveTaskButton');
-const deleteFromViewButton = document.getElementById('deleteFromViewButton');
+const deleteTaskButton = document.getElementById('deleteTaskButton');
 
 let selectedDate = null;
 let selectedTaskId = null;
@@ -48,6 +48,7 @@ toggleDescriptionButton.onclick = () => {
     toggleDescriptionButton.textContent = 'Добавить описание';
     descriptionInput.value = '';
   }
+  saveTaskButton.style.display = 'block'; // Показать кнопку "Сохранить"
 };
 
 toggleEditDescriptionButton.onclick = () => {
@@ -59,7 +60,9 @@ toggleEditDescriptionButton.onclick = () => {
     toggleEditDescriptionButton.textContent = 'Добавить описание';
     editDescriptionInput.value = '';
   }
+  saveTaskButton.style.display = 'block'; // Показать кнопку "Сохранить"
 };
+
 
 // Закрытие всех модальных окон
 function closeModal() {
@@ -79,21 +82,6 @@ function openTaskModal(date) {
   descriptionInput.style.display = 'none';
   toggleDescriptionButton.textContent = 'Добавить описание';
   taskInput.focus();
-}
-
-// Открытие модального окна просмотра задачи
-function openViewTaskModal(taskId, taskText, taskDescription) {
-  selectedTaskId = taskId;
-  viewTaskText.textContent = taskText;
-
-  if (taskDescription && taskDescription !== '-') {
-    viewTaskDescription.textContent = taskDescription;
-    viewDescriptionContainer.style.display = 'block';
-  } else {
-    viewDescriptionContainer.style.display = 'none';
-  }
-
-  viewTaskModal.classList.add('show');
 }
 
 // Добавление задачи
@@ -119,14 +107,13 @@ addTaskButton.onclick = async () => {
   }
 };
 
-// Открываем модальное окно редактирования задачи
-
-editFromViewButton.onclick = () => {
-  if (!selectedTaskId) return;
+// Открытие модального окна редактирования задачи при клике на задачу
+function openEditTaskModal(taskId) {
+  selectedTaskId = taskId;
 
   // Получение данных задачи из Firestore
   db.collection('tasks')
-    .doc(selectedTaskId)
+    .doc(taskId)
     .get()
     .then((doc) => {
       if (doc.exists) {
@@ -138,8 +125,8 @@ editFromViewButton.onclick = () => {
         editDescriptionInput.style.display = description ? 'block' : 'none';
         toggleEditDescriptionButton.textContent = description ? 'Удалить описание' : 'Добавить описание';
 
-        closeModal(); // Закрываем текущее окно просмотра
-        editTaskModal.classList.add('show'); // Открываем окно редактирования
+        saveTaskButton.style.display = 'none'; // Скрыть кнопку "Сохранить" до изменений
+        editTaskModal.classList.add('show');
       } else {
         alert('Задача не найдена!');
       }
@@ -147,7 +134,27 @@ editFromViewButton.onclick = () => {
     .catch((error) => {
       alert(`Ошибка при загрузке задачи: ${error.message}`);
     });
+}
+
+// Отображение кнопки "Сохранить" только при изменении данных
+[editTaskInput, editDescriptionInput].forEach((input) => {
+  input.addEventListener('input', () => {
+    saveTaskButton.style.display = 'block';
+  });
+});
+
+// Удаление задачи из окна редактирования
+deleteTaskButton.onclick = async () => {
+  if (!selectedTaskId) return;
+
+  try {
+    await db.collection('tasks').doc(selectedTaskId).delete();
+    closeModal(); // Закрываем модальное окно после удаления
+  } catch (error) {
+    alert(`Ошибка при удалении задачи: ${error.message}`);
+  }
 };
+
 
 // Сохранение изменений в задаче
 saveTaskButton.onclick = async () => {
@@ -262,11 +269,14 @@ function subscribeToTasks(date, tasksListEl) {
         taskItemEl.appendChild(checkboxEl);
         taskItemEl.appendChild(taskElementsDiv);
 
+        
+        // Подписка на задачи: открываем сразу окно редактирования
         taskItemEl.onclick = (event) => {
           if (event.target !== checkboxEl) {
-            openViewTaskModal(doc.id, taskData.task, taskData.description);
+            openEditTaskModal(doc.id);
           }
         };
+
 
         tasksListEl.appendChild(taskItemEl);
       });
@@ -301,17 +311,6 @@ saveTaskButton.onclick = async () => {
   }
 };
 
-// Удаление задачи из окна просмотра задачи
-deleteFromViewButton.onclick = async () => {
-  if (selectedTaskId) {
-    try {
-      await db.collection('tasks').doc(selectedTaskId).delete();
-      viewTaskModal.classList.remove('show');
-    } catch (error) {
-      alert(`Ошибка при удалении задачи: ${error.message}`);
-    }
-  }
-};
 
 // Выход из аккаунта
 logoutButton.onclick = () => {
