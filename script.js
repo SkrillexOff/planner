@@ -19,38 +19,47 @@ const calendarEl = document.getElementById('calendar');
 const taskModal = document.getElementById('taskModal');
 const taskInput = document.getElementById('taskInput');
 const descriptionInput = document.getElementById('descriptionInput');
+const toggleDescriptionButton = document.getElementById('toggleDescriptionButton');
 const addTaskButton = document.getElementById('addTaskButton');
 const closeBtns = document.querySelectorAll('.close-btn');
 const logoutButton = document.getElementById('logoutButton');
 const viewTaskModal = document.getElementById('viewTaskModal');
 const viewTaskText = document.getElementById('viewTaskText');
+const viewDescriptionContainer = document.getElementById('viewDescriptionContainer');
 const viewTaskDescription = document.getElementById('viewTaskDescription');
 const editFromViewButton = document.getElementById('editFromViewButton');
 const editTaskModal = document.getElementById('editTaskModal');
 const editTaskInput = document.getElementById('editTaskInput');
 const editDescriptionInput = document.getElementById('editDescriptionInput');
+const toggleEditDescriptionButton = document.getElementById('toggleEditDescriptionButton');
 const saveTaskButton = document.getElementById('saveTaskButton');
 const deleteFromViewButton = document.getElementById('deleteFromViewButton');
 
 let selectedDate = null;
 let selectedTaskId = null;
 
-// Открытие модального окна добавления задачи
-function openTaskModal(date) {
-  selectedDate = date;
-  taskModal.classList.add('show');
-  taskInput.value = '';
-  descriptionInput.value = '';
-  taskInput.focus();
-}
+// Логика для управления полем описания в модальных окнах
+toggleDescriptionButton.onclick = () => {
+  if (descriptionInput.style.display === 'none') {
+    descriptionInput.style.display = 'block';
+    toggleDescriptionButton.textContent = 'Удалить описание';
+  } else {
+    descriptionInput.style.display = 'none';
+    toggleDescriptionButton.textContent = 'Добавить описание';
+    descriptionInput.value = '';
+  }
+};
 
-// Открытие модального окна просмотра задачи
-function openViewTaskModal(taskId, taskText, taskDescription) {
-  selectedTaskId = taskId;
-  viewTaskText.textContent = taskText;
-  viewTaskDescription.textContent = taskDescription || '-';
-  viewTaskModal.classList.add('show');
-}
+toggleEditDescriptionButton.onclick = () => {
+  if (editDescriptionInput.style.display === 'none') {
+    editDescriptionInput.style.display = 'block';
+    toggleEditDescriptionButton.textContent = 'Удалить описание';
+  } else {
+    editDescriptionInput.style.display = 'none';
+    toggleEditDescriptionButton.textContent = 'Добавить описание';
+    editDescriptionInput.value = '';
+  }
+};
 
 // Закрытие всех модальных окон
 function closeModal() {
@@ -59,60 +68,108 @@ function closeModal() {
   viewTaskModal.classList.remove('show');
 }
 
-// Обработчик для кнопок закрытия
-closeBtns.forEach(btn => {
-  btn.onclick = closeModal;
-});
+closeBtns.forEach(btn => btn.onclick = closeModal);
 
-// Переход от просмотра задачи к её редактированию
-editFromViewButton.onclick = () => {
-  viewTaskModal.classList.remove('show');
-  editTaskModal.classList.add('show');
-  editTaskInput.value = viewTaskText.textContent;
-  editDescriptionInput.value = viewTaskDescription.textContent !== '-'
-    ? viewTaskDescription.textContent
-    : '';
-  editTaskInput.focus();
-};
+// Открытие модального окна добавления задачи
+function openTaskModal(date) {
+  selectedDate = date;
+  taskModal.classList.add('show');
+  taskInput.value = '';
+  descriptionInput.value = '';
+  descriptionInput.style.display = 'none';
+  toggleDescriptionButton.textContent = 'Добавить описание';
+  taskInput.focus();
+}
 
-// Универсальный обработчик для клика вне модальных окон
-window.onclick = (event) => {
-  if (event.target === taskModal) taskModal.classList.remove('show');
-  if (event.target === editTaskModal) editTaskModal.classList.remove('show');
-  if (event.target === viewTaskModal) viewTaskModal.classList.remove('show');
-};
+// Открытие модального окна просмотра задачи
+function openViewTaskModal(taskId, taskText, taskDescription) {
+  selectedTaskId = taskId;
+  viewTaskText.textContent = taskText;
 
-// Закрытие модальных окон при нажатии клавиши Esc
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeModal();
-});
+  if (taskDescription && taskDescription !== '-') {
+    viewTaskDescription.textContent = taskDescription;
+    viewDescriptionContainer.style.display = 'block';
+  } else {
+    viewDescriptionContainer.style.display = 'none';
+  }
+
+  viewTaskModal.classList.add('show');
+}
 
 // Добавление задачи
 addTaskButton.onclick = async () => {
   const task = taskInput.value.trim();
-  const description = descriptionInput.value.trim(); // Получение описания
+  const description = descriptionInput.value.trim();
 
-  if (task === '') return;
+  if (!task) return;
 
   const userId = auth.currentUser.uid;
 
-  const taskData = {
-    task,
-    description, // Сохранение описания
-    date: selectedDate,
-    completed: false,
-    userId
-  };
-
   try {
-    await db.collection('tasks').add(taskData);
-    taskInput.value = '';
-    descriptionInput.value = ''; // Очистка поля описания
+    await db.collection('tasks').add({
+      task,
+      description,
+      date: selectedDate,
+      completed: false,
+      userId
+    });
     closeModal();
   } catch (error) {
     alert(`Ошибка при добавлении задачи: ${error.message}`);
   }
 };
+
+// Открываем модальное окно редактирования задачи
+
+editFromViewButton.onclick = () => {
+  if (!selectedTaskId) return;
+
+  // Получение данных задачи из Firestore
+  db.collection('tasks')
+    .doc(selectedTaskId)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        const { task, description } = doc.data();
+
+        // Открываем модальное окно редактирования и заполняем поля
+        editTaskInput.value = task || '';
+        editDescriptionInput.value = description || '';
+        editDescriptionInput.style.display = description ? 'block' : 'none';
+        toggleEditDescriptionButton.textContent = description ? 'Удалить описание' : 'Добавить описание';
+
+        closeModal(); // Закрываем текущее окно просмотра
+        editTaskModal.classList.add('show'); // Открываем окно редактирования
+      } else {
+        alert('Задача не найдена!');
+      }
+    })
+    .catch((error) => {
+      alert(`Ошибка при загрузке задачи: ${error.message}`);
+    });
+};
+
+// Сохранение изменений в задаче
+saveTaskButton.onclick = async () => {
+  const updatedTask = editTaskInput.value.trim();
+  const updatedDescription = editDescriptionInput.value.trim();
+
+  if (!updatedTask || !selectedTaskId) return;
+
+  try {
+    await db.collection('tasks').doc(selectedTaskId).update({
+      task: updatedTask,
+      description: updatedDescription || '-',
+    });
+
+    closeModal();
+  } catch (error) {
+    alert(`Ошибка при сохранении изменений: ${error.message}`);
+  }
+};
+
+
+
 
 // Создание календаря
 function createCalendar() {

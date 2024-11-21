@@ -14,7 +14,6 @@
 
   <!-- Telegram Web App SDK -->
   <script async src="https://telegram.org/js/telegram-web-app.js"></script>
-
 </head>
 <body>
   <div class="header">
@@ -27,9 +26,7 @@
     </div>
   </div>
 
-
   <div id="calendar"></div>
-
 
   <!-- Модальное окно для добавления задачи -->
   <div id="taskModal" class="modal">
@@ -38,9 +35,26 @@
       <h2>Добавить задачу</h2>
       <div class="description">Название задачи</div>
       <textarea id="taskInput"></textarea>
-      <div class="description">Описание задачи</div>
-      <textarea id="descriptionInput"></textarea>
+      <div id="descriptionControls">
+        <button id="toggleDescriptionButton" class="btn">Добавить описание</button>
+      </div>
+      <textarea id="descriptionInput" style="display: none;"></textarea>
       <button id="addTaskButton" class="btn primary">Добавить задачу</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно для редактирования задачи -->
+  <div id="editTaskModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2>Редактировать задачу</h2>
+      <div class="description">Название задачи</div>
+      <textarea id="editTaskInput"></textarea>
+      <div id="editDescriptionControls">
+        <button id="toggleEditDescriptionButton" class="btn">Добавить описание</button>
+      </div>
+      <textarea id="editDescriptionInput" style="display: none;"></textarea>
+      <button id="saveTaskButton" class="btn primary">Сохранить</button>
     </div>
   </div>
 
@@ -51,27 +65,14 @@
       <h2>Задача</h2>
       <div class="description">Название задачи</div>
       <p id="viewTaskText"></p>
-      <div class="description">Описание задачи</div>
-      <p id="viewTaskDescription"></p>
+      <div id="viewDescriptionContainer" style="display: none;">
+        <div class="description">Описание задачи</div>
+        <p id="viewTaskDescription"></p>
+      </div>
       <div class="modal-actions">
         <button id="deleteFromViewButton" class="btn danger">Удалить</button>
         <button id="editFromViewButton" class="btn primary">Редактировать</button>
       </div>
-   </div>
-</div>
-
-
-
-  <!-- Модальное окно для редактирования задачи -->
-  <div id="editTaskModal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn">&times;</span>
-      <h2>Редактировать задачу</h2>
-      <div class="description">Название задачи</div>
-      <textarea id="editTaskInput"></textarea>
-      <div class="description">Описание задачи</div>
-      <textarea id="editDescriptionInput"></textarea>
-      <button id="saveTaskButton" class="btn primary">Сохранить</button>
     </div>
   </div>
 
