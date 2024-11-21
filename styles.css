@@ -51,6 +51,11 @@ address {
 
 /* Form */
 
+input:focus,
+textarea:focus {
+    outline: none;
+}
+
 input, textarea, button, select {
 	font-family: inherit;
     font-size: inherit;
@@ -169,7 +174,7 @@ span {
   list-style-type: none;
   padding: 0;
   margin-top: 16px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .task-elements {
@@ -185,7 +190,7 @@ span {
   background: #FFFFFF;
   outline: 1px solid #e5e3de;
   border-radius: 16px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .task-item.done span {
@@ -336,9 +341,7 @@ span {
 
 #taskInput, #email, #password, #editTaskInput, #editDescriptionInput, #descriptionInput {
   width: 100%;
-  padding: 10px;
   margin: 10px 0;
-  border: 1px solid #000;
   border-radius: 8px;
   font-size: 16px;
 }
