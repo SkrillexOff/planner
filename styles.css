@@ -131,12 +131,14 @@ span {
 }
 
 #calendar {
+  padding-left: 8px;
+  padding-right: 8px;
   display: flex;
   flex-direction: column;
   gap: 32px;
   width: 100%;
   max-width: 500px;
-  padding-top: 120px;
+  padding-top: 96px;
 }
 
 .calendar-day {
@@ -453,7 +455,10 @@ span {
 
 /* Стили для блока с почтой пользователя */
 #userInfo {
-  padding: 16px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   display: flex;
   width: 100%;
   max-width: 500px;
@@ -465,8 +470,9 @@ span {
 }
 
 #userEmail {
-  font-size: 1.1em;
+  font-size: 16px;
   color: #333;
+  width: 100%;
 }
 
 .would-you {
@@ -517,7 +523,6 @@ footer {
 .user-info-container {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 #viewTaskDescription {
