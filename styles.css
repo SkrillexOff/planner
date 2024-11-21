@@ -97,7 +97,7 @@ legend {
   position: fixed;
   width: 100%;
   z-index: 1;
-  border-bottom: 1px solid #d9d8d3;
+  border-bottom: 1px solid #e5e3de;
 }
 
 body {
@@ -183,6 +183,7 @@ span {
   gap: 8px;
   padding: 16px;
   background: #FFFFFF;
+  outline: 1px solid #e5e3de;
   border-radius: 16px;
   margin-top: 4px;
 }
@@ -226,7 +227,7 @@ span {
   font-size: 16px;
   font-weight: 500;
   border-radius: 16px;
-  border: none;
+  outline: 1px solid #e5e3de;
   cursor: pointer;
   display: flex;
   align-items: center;
