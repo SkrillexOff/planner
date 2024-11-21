@@ -436,7 +436,7 @@ span {
   background-color: #c9302c;
 }
 
-#deleteFromViewButton {
+#deleteFromViewButton, #deleteTaskButton {
   background-color: #d9534f;
   color: #ffffff;
   width: 100%;
@@ -524,4 +524,21 @@ footer {
   font-weight: 400 !important;
   font-size: 16px !important;
   line-height: 132% !important;
+}
+
+#toggleEditDescriptionButton, #toggleDescriptionButton {
+  background-color: #ffffff;
+  color: #9C998E;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  width: 100%;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: left;
 }
