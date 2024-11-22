@@ -32,10 +32,8 @@
   <div id="taskModal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h2>Добавить задачу</h2>
-      <div class="description">Название задачи</div>
-      <textarea id="taskInput"></textarea>
-      <textarea id="descriptionInput" style="display: none;"></textarea>
+      <textarea id="taskInput" placeholder="Название"></textarea>
+      <textarea id="descriptionInput" placeholder="Описание" style="display: none;"></textarea>
       <div id="descriptionControls">
         <button id="toggleDescriptionButton" class="btn">Добавить описание</button>
       </div>
@@ -47,10 +45,8 @@
   <div id="editTaskModal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h2>Задача</h2>
-      <div class="description">Название задачи</div>
-      <textarea id="editTaskInput"></textarea>
-      <textarea id="editDescriptionInput" style="display: none;"></textarea>
+      <textarea id="editTaskInput" placeholder="Название"></textarea>
+      <textarea id="editDescriptionInput" placeholder="Описание" style="display: none;"></textarea>
       <div id="editDescriptionControls">
         <button id="toggleEditDescriptionButton" class="btn">Добавить описание</button>
       </div>
@@ -63,8 +59,6 @@
   <div id="viewTaskModal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h2>Задача</h2>
-      <div class="description">Название задачи</div>
       <p id="viewTaskText"></p>
       <div id="viewDescriptionContainer" style="display: none;">
         <div class="description">Описание задачи</div>
