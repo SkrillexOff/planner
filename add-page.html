@@ -11,12 +11,29 @@
 <body>
   <div id="add-page-container">
     <h1>Добавить новую страницу</h1>
+    
+    <!-- Название страницы -->
+    <input type="text" id="page-title" placeholder="Название страницы">
+    
+    <!-- Кнопка добавить свойство -->
+    <button id="add-property-btn">Добавить свойство</button>
 
-    <!-- Форма для добавления новой страницы -->
-    <input type="text" id="page-title" placeholder="Название страницы" required>
-    <textarea id="page-content" placeholder="Содержимое страницы" required></textarea>
+    <!-- Контейнер для свойств -->
+    <div id="properties-container"></div>
+    
+    <!-- Кнопки управления -->
     <button id="save-page-btn">Сохранить страницу</button>
     <button id="cancel-btn">Отмена</button>
+  </div>
+
+  <!-- Модальное окно -->
+  <div id="property-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Выберите свойство</h2>
+      <button class="property-option" data-type="text">Текст</button>
+      <!-- В будущем можно добавить больше свойств -->
+      <button id="close-modal">Закрыть</button>
+    </div>
   </div>
 </body>
 </html>
