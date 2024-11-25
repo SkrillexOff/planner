@@ -1,7 +1,6 @@
-// add-page.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 
 // Конфигурация Firebase
 const firebaseConfig = {
@@ -17,102 +16,147 @@ const firebaseConfig = {
 
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Элементы DOM
-const savePageBtn = document.getElementById('save-page-btn');
-const cancelBtn = document.getElementById('cancel-btn');
-const pageTitleInput = document.getElementById('page-title');
-const addPropertyBtn = document.getElementById('add-property-btn');
+// DOM элементы
+const titleInput = document.getElementById('page-title');
+const saveButton = document.getElementById('save-page-btn');
+const addPropertyButton = document.getElementById('add-property-btn');
 const propertiesContainer = document.getElementById('properties-container');
-const propertyModal = document.getElementById('property-modal');
-const closeModalBtn = document.getElementById('close-modal');
 
-// Массив для хранения свойств
-const pageProperties = [];
+// Локальное хранилище свойств
+let properties = [];
 
-// Функция для добавления текстового свойства
-function addTextProperty() {
-  const propertyId = `property-${Date.now()}`; // Уникальный ID для свойства
+// Функция для добавления свойства
+function addProperty(property) {
+  properties.push(property);
+
+  // Обновляем список свойств
   const propertyElement = document.createElement('div');
   propertyElement.classList.add('property-item');
-  propertyElement.innerHTML = `
-    <label for="${propertyId}">Текст:</label>
-    <input type="text" id="${propertyId}" class="property-input" placeholder="Введите текст">
-  `;
-  propertiesContainer.appendChild(propertyElement);
+  propertyElement.dataset.type = property.type;
+  propertyElement.dataset.value = property.value;
 
-  // Сохраняем свойство в массив
-  pageProperties.push({
-    type: 'text',
-    id: propertyId,
+  if (property.type === 'text') {
+    propertyElement.innerHTML = `<strong>Текст:</strong> ${property.value}`;
+  } else if (property.type === 'status') {
+    propertyElement.innerHTML = `<strong>Статус:</strong> ${property.value}`;
+  }
+
+  propertiesContainer.appendChild(propertyElement);
+}
+
+// Функция для открытия модального окна выбора статуса
+function openStatusModal(callback) {
+  const statusModal = document.createElement('div');
+  statusModal.classList.add('modal');
+
+  statusModal.innerHTML = `
+    <div class="modal-content">
+      <h3>Выберите статус</h3>
+      <button class="status-option" data-status="нужно сделать">Нужно сделать</button>
+      <button class="status-option" data-status="в работе">В работе</button>
+      <button class="status-option" data-status="готово">Готово</button>
+      <button id="close-status-modal">Закрыть</button>
+    </div>
+  `;
+
+  document.body.appendChild(statusModal);
+
+  // Обработчик выбора статуса
+  statusModal.querySelectorAll('.status-option').forEach(button => {
+    button.addEventListener('click', () => {
+      const selectedStatus = button.getAttribute('data-status');
+      callback(selectedStatus);
+      statusModal.remove();
+    });
+  });
+
+  // Обработчик закрытия модального окна
+  statusModal.querySelector('#close-status-modal').addEventListener('click', () => {
+    statusModal.remove();
   });
 }
 
-// Функция для сохранения страницы
-async function savePage() {
-  const title = pageTitleInput.value;
+// Обработчик кнопки "Добавить свойство"
+addPropertyButton.addEventListener('click', () => {
+  const propertyModal = document.createElement('div');
+  propertyModal.classList.add('modal');
 
-  if (!title) {
-    alert('Введите название страницы!');
-    return;
-  }
+  propertyModal.innerHTML = `
+    <div class="modal-content">
+      <h3>Добавить свойство</h3>
+      <button id="add-text-property">Текст</button>
+      <button id="add-status-property">Статус</button>
+      <button id="close-modal">Закрыть</button>
+    </div>
+  `;
 
-  const user = auth.currentUser;
-  if (user) {
-    try {
-      // Сохраняем свойства из DOM
-      const properties = pageProperties.map((prop) => {
-        const inputElement = document.getElementById(prop.id);
-        return {
-          type: prop.type,
-          value: inputElement ? inputElement.value : '',
-        };
-      });
+  document.body.appendChild(propertyModal);
 
-      // Добавляем страницу в Firestore
-      await addDoc(collection(db, "pages"), {
-        title: title,
-        properties: properties,
-        userUID: user.uid,
-        createdAt: serverTimestamp(),
-      });
-
-      window.location.href = "index.html";
-    } catch (e) {
-      console.error("Ошибка при добавлении страницы: ", e);
+  // Добавление свойства "Текст"
+  document.getElementById('add-text-property').addEventListener('click', () => {
+    const textValue = prompt('Введите текст:');
+    if (textValue) {
+      addProperty({ type: 'text', value: textValue });
     }
-  } else {
-    console.log("Пользователь не авторизован");
-  }
-}
+    propertyModal.remove();
+  });
 
-// Открытие модального окна
-addPropertyBtn.addEventListener('click', () => {
-  propertyModal.style.display = 'block';
+  // Добавление свойства "Статус" через выбор статуса
+  document.getElementById('add-status-property').addEventListener('click', () => {
+    propertyModal.remove();
+    openStatusModal(selectedStatus => {
+      addProperty({ type: 'status', value: selectedStatus });
+    });
+  });
+
+  // Закрытие модального окна
+  document.getElementById('close-modal').addEventListener('click', () => {
+    propertyModal.remove();
+  });
 });
 
-// Закрытие модального окна
-closeModalBtn.addEventListener('click', () => {
-  propertyModal.style.display = 'none';
-});
-
-// Обработчик выбора свойства
-propertyModal.addEventListener('click', (event) => {
-  if (event.target.classList.contains('property-option')) {
-    const type = event.target.getAttribute('data-type');
-    if (type === 'text') {
-      addTextProperty();
-    }
-    propertyModal.style.display = 'none';
+// Обработчик для изменения существующего статуса
+propertiesContainer.addEventListener('click', (event) => {
+  const target = event.target.closest('.property-item');
+  if (target && target.dataset.type === 'status') {
+    openStatusModal(newStatus => {
+      target.innerHTML = `<strong>Статус:</strong> ${newStatus}`;
+      target.dataset.value = newStatus;
+    });
   }
 });
 
 // Сохранение страницы
-savePageBtn.addEventListener('click', savePage);
+saveButton.addEventListener('click', async () => {
+  const title = titleInput.value.trim();
 
-// Отмена
-cancelBtn.addEventListener('click', () => {
-  window.location.href = "index.html";
+  if (!title) {
+    alert('Введите название страницы.');
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  if (user) {
+    await addDoc(collection(db, 'pages'), {
+      title,
+      properties,
+      userUID: user.uid,
+      createdAt: serverTimestamp()
+    });
+    alert('Страница успешно добавлена!');
+    window.location.href = 'index.html';
+  } else {
+    alert('Ошибка авторизации.');
+  }
+});
+
+// Проверка авторизации
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = 'auth.html';
+  }
 });
