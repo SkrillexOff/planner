@@ -17,8 +17,8 @@ const firebaseConfig = {
 
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);  // Получаем auth для текущего экземпляра приложения
-const db = getFirestore(app); // Получаем firestore для текущего экземпляра
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 const logoutBtn = document.getElementById('logout-btn');
 const addPageBtn = document.getElementById('add-page-btn');
@@ -29,13 +29,28 @@ const loginMessage = document.getElementById('login-message');
 function logout() {
   signOut(auth).then(() => {
     console.log('User logged out');
-    window.location.href = "auth.html";  // Перенаправляем на страницу авторизации
+    window.location.href = "auth.html";
   }).catch((error) => {
     console.error('Error:', error.code, error.message);
   });
 }
 
 logoutBtn.addEventListener('click', logout);
+
+// Функция для отображения свойств страницы
+function renderPageProperties(properties) {
+  if (!properties || properties.length === 0) return '';
+
+  return properties
+    .map((property) => {
+      if (property.type === 'text') {
+        return `<p><strong>Текст:</strong> ${property.value}</p>`;
+      }
+      // Можно добавить обработку других типов свойств здесь
+      return '';
+    })
+    .join('');
+}
 
 // Функция для загрузки страниц
 async function loadPages() {
@@ -52,7 +67,15 @@ async function loadPages() {
       const page = doc.data();
       const pageItem = document.createElement('div');
       pageItem.classList.add('page-item');
-      pageItem.innerHTML = `<strong>${page.title}</strong><p>${page.content}</p>`;
+
+      // Формируем содержимое страницы
+      pageItem.innerHTML = `
+        <div>
+          <h3>${page.title}</h3>
+          ${renderPageProperties(page.properties)}
+        </div>
+      `;
+
       pagesList.appendChild(pageItem);
     });
   }
@@ -72,5 +95,5 @@ onAuthStateChanged(auth, (user) => {
 
 // Обработчик для кнопки "Добавить страницу"
 addPageBtn.addEventListener('click', () => {
-  window.location.href = "add-page.html";  // Перенаправляем на страницу добавления страницы
+  window.location.href = "add-page.html";
 });
