@@ -45,55 +45,82 @@ onAuthStateChanged(auth, (user) => {
 
 // Функция для загрузки данных страницы
 async function loadPageData(pageId) {
-    if (!pageId) return;
-  
-    const docRef = doc(db, 'pages', pageId);
-    const docSnap = await getDoc(docRef);
-  
-    if (docSnap.exists()) {
-      const pageData = docSnap.data();
-  
-      // Устанавливаем заголовок
-      titleInput.value = pageData.title || '';
-  
-      // Очищаем локальные свойства и контейнер
-      properties = [];
-      propertiesContainer.innerHTML = '';
-  
-      // Заполняем свойства из данных
-      if (pageData.properties) {
-        properties = [...pageData.properties];
-        properties.forEach(addProperty);
-      }
-    } else {
-      alert('Страница не найдена.');
-      window.location.href = 'index.html';
+  if (!pageId) return;
+
+  const docRef = doc(db, 'pages', pageId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const pageData = docSnap.data();
+
+    // Устанавливаем заголовок
+    titleInput.value = pageData.title || '';
+
+    // Очищаем локальные свойства и контейнер
+    properties = [];
+    propertiesContainer.innerHTML = '';
+
+    // Заполняем свойства из данных
+    if (pageData.properties) {
+      properties = [...pageData.properties];
+      renderProperties();
     }
+  } else {
+    alert('Страница не найдена.');
+    window.location.href = 'index.html';
   }
-  
-  // Функция для добавления свойства
-  function addProperty(property) {
-    // Проверяем, существует ли свойство уже в массиве (избегаем дублирования)
-    if (!properties.some(p => p.type === property.type && p.value === property.value)) {
-      properties.push(property);
-    }
-  
-    // Создаём элемент свойства
+}
+
+// Функция для отображения свойств в контейнере
+function renderProperties() {
+  propertiesContainer.innerHTML = '';
+
+  properties.forEach(property => {
     const propertyElement = document.createElement('div');
     propertyElement.classList.add('property-item');
     propertyElement.dataset.type = property.type;
     propertyElement.dataset.value = property.value;
-  
+
     if (property.type === 'text') {
       propertyElement.innerHTML = `<strong>Текст:</strong> ${property.value}`;
     } else if (property.type === 'status') {
       propertyElement.innerHTML = `<strong>Статус:</strong> ${property.value}`;
     }
-  
-    // Добавляем свойство в контейнер
+
+    // Добавляем обработчик клика для изменения свойства
+    propertyElement.addEventListener('click', () => editProperty(propertyElement));
+
     propertiesContainer.appendChild(propertyElement);
+  });
+}
+
+// Функция для изменения свойства
+function editProperty(propertyElement) {
+  const type = propertyElement.dataset.type;
+  const value = propertyElement.dataset.value;
+
+  if (type === 'status') {
+    // Открыть модальное окно для изменения статуса
+    openStatusModal(newStatus => {
+      // Найти свойство в массиве и обновить его
+      const propertyIndex = properties.findIndex(p => p.type === type && p.value === value);
+      if (propertyIndex !== -1) {
+        properties[propertyIndex].value = newStatus;
+      }
+
+      // Перерисовать список свойств
+      renderProperties();
+    });
   }
-  
+}
+
+// Функция для добавления свойства
+function addProperty(property) {
+  if (!properties.some(p => p.type === property.type && p.value === property.value)) {
+    properties.push(property);
+  }
+  renderProperties();
+}
 
 // Функция для добавления новой страницы
 async function addPage() {
@@ -151,7 +178,7 @@ saveButton.addEventListener('click', async () => {
 
 // Обработчик кнопки "Отмена"
 cancelButton.addEventListener('click', () => {
-    window.location.href = 'index.html'; // Переход на главную страницу
+  window.location.href = 'index.html'; // Переход на главную страницу
 });
 
 // Обработчик кнопки "Добавить свойство"
