@@ -1,9 +1,7 @@
-// script.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, orderBy, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
-// Конфигурация Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
   authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
@@ -15,7 +13,6 @@ const firebaseConfig = {
   measurementId: "G-4V1NYWDVKF"
 };
 
-// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -26,51 +23,32 @@ const pagesList = document.getElementById('pages-list');
 const loginMessage = document.getElementById('login-message');
 const statusTabs = document.getElementById('status-tabs');
 
-let allPages = []; // Для хранения всех загруженных страниц
+let allPages = [];
 
-// Функция для выхода
 function logout() {
   signOut(auth).then(() => {
-    console.log('User logged out');
     window.location.href = "auth.html";
   }).catch((error) => {
-    console.error('Error:', error.code, error.message);
+    console.error('Error:', error.message);
   });
 }
 
 logoutBtn.addEventListener('click', logout);
 
-// Функция для отображения свойств страницы
 function renderPageProperties(properties) {
   if (!properties || properties.length === 0) return '';
-
-  return properties
-    .map((property) => {
-      if (property.type === 'text') {
-        return `<p><strong>Текст:</strong> ${property.value}</p>`;
-      } else if (property.type === 'status') {
-        let statusColor;
-        switch (property.value) {
-          case 'нужно сделать':
-            statusColor = 'red';
-            break;
-          case 'в работе':
-            statusColor = 'orange';
-            break;
-          case 'готово':
-            statusColor = 'green';
-            break;
-          default:
-            statusColor = 'gray';
-        }
-        return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${statusColor};">${property.value}</span></p>`;
-      }
-      return '';
-    })
-    .join('');
+  return properties.map((property) => {
+    if (property.type === 'text') {
+      return `<p><strong>Текст:</strong> ${property.value}</p>`;
+    } else if (property.type === 'status') {
+      const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
+      const color = statusColors[property.value] || "gray";
+      return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${color};">${property.value}</span></p>`;
+    }
+    return '';
+  }).join('');
 }
 
-// Функция для загрузки страниц
 async function loadPages() {
   const user = auth.currentUser;
   if (user) {
@@ -80,18 +58,28 @@ async function loadPages() {
       orderBy("createdAt")
     );
     const querySnapshot = await getDocs(pagesQuery);
-
-    allPages = []; // Сброс перед загрузкой новых данных
-    querySnapshot.forEach((doc) => {
-      const page = { id: doc.id, ...doc.data() };
-      allPages.push(page);
-    });
-
-    renderPages('all'); // Отобразить все страницы по умолчанию
+    allPages = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    renderPages('all');
   }
 }
 
-// Функция для отображения страниц на основе выбранного статуса
+// Добавляем обработчик клика на превью страницы
+function setupPageClickListeners() {
+  const pageItems = document.querySelectorAll('.page-item');
+  
+  pageItems.forEach((pageItem) => {
+    pageItem.addEventListener('click', () => {
+      const pageId = pageItem.dataset.pageId; // Берем ID страницы из атрибута
+      if (pageId) {
+        // Переходим на страницу редактирования с передачей ID через URL
+        window.location.href = `add-page.html?pageId=${pageId}`;
+      }
+    });
+  });
+}
+
+
+// Обновляем renderPages для добавления ID в элемент
 function renderPages(filterStatus) {
   pagesList.innerHTML = '';
 
@@ -104,6 +92,7 @@ function renderPages(filterStatus) {
   filteredPages.forEach((page) => {
     const pageItem = document.createElement('div');
     pageItem.classList.add('page-item');
+    pageItem.dataset.pageId = page.id; // Устанавливаем ID страницы
 
     // Формируем содержимое страницы
     pageItem.innerHTML = `
@@ -115,9 +104,11 @@ function renderPages(filterStatus) {
 
     pagesList.appendChild(pageItem);
   });
+
+  setupPageClickListeners(); // Устанавливаем обработчики клика
 }
 
-// Обработчик смены вкладки
+
 statusTabs.addEventListener('click', (event) => {
   if (event.target.classList.contains('status-tab')) {
     const selectedStatus = event.target.getAttribute('data-status');
@@ -125,7 +116,6 @@ statusTabs.addEventListener('click', (event) => {
   }
 });
 
-// Проверка авторизации
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById('app').style.display = 'block';
@@ -137,7 +127,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Обработчик для кнопки "Добавить страницу"
 addPageBtn.addEventListener('click', () => {
   window.location.href = "add-page.html";
 });
