@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, orderBy, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -18,13 +18,21 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const logoutBtn = document.getElementById('logout-btn');
-const addPageBtn = document.getElementById('add-page-btn');
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('status-settings-modal');
+const statusList = document.getElementById('status-list');
+const addStatusBtn = document.getElementById('add-status-btn');
+const closeSettingsModalBtn = document.getElementById('close-settings-modal');
+const newStatusInput = document.getElementById('new-status');
 const pagesList = document.getElementById('pages-list');
-const loginMessage = document.getElementById('login-message');
 const statusTabs = document.getElementById('status-tabs');
+const addPageBtn = document.getElementById('add-page-btn');
+const loginMessage = document.getElementById('login-message');
 
 let allPages = [];
+let statuses = [];
 
+// Функция для выхода
 function logout() {
   signOut(auth).then(() => {
     window.location.href = "auth.html";
@@ -35,20 +43,45 @@ function logout() {
 
 logoutBtn.addEventListener('click', logout);
 
-function renderPageProperties(properties) {
-  if (!properties || properties.length === 0) return '';
-  return properties.map((property) => {
-    if (property.type === 'text') {
-      return `<p><strong>Текст:</strong> ${property.value}</p>`;
-    } else if (property.type === 'status') {
-      const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
-      const color = statusColors[property.value] || "gray";
-      return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${color};">${property.value}</span></p>`;
-    }
-    return '';
-  }).join('');
+// Открытие модального окна настроек
+settingsBtn.addEventListener('click', () => {
+  settingsModal.style.display = 'block';
+  loadStatuses();
+});
+
+// Закрытие модального окна
+closeSettingsModalBtn.addEventListener('click', () => {
+  settingsModal.style.display = 'none';
+});
+
+// Загрузка статусов из Firebase
+async function loadStatuses() {
+  const statusesSnapshot = await getDocs(collection(db, 'statuses'));
+  statuses = statusesSnapshot.docs.map(doc => doc.data().name);
+  renderStatuses();
 }
 
+// Рендеринг списка статусов
+function renderStatuses() {
+  statusList.innerHTML = '';
+  statuses.forEach(status => {
+    const statusItem = document.createElement('li');
+    statusItem.textContent = status;
+    statusList.appendChild(statusItem);
+  });
+}
+
+// Добавление нового статуса
+addStatusBtn.addEventListener('click', async () => {
+  const newStatus = newStatusInput.value.trim();
+  if (newStatus) {
+    await addDoc(collection(db, 'statuses'), { name: newStatus });
+    newStatusInput.value = ''; // Очистка поля ввода
+    loadStatuses(); // Перезагружаем список статусов
+  }
+});
+
+// Загрузка страниц из Firebase
 async function loadPages() {
   const user = auth.currentUser;
   if (user) {
@@ -63,23 +96,7 @@ async function loadPages() {
   }
 }
 
-// Добавляем обработчик клика на превью страницы
-function setupPageClickListeners() {
-  const pageItems = document.querySelectorAll('.page-item');
-  
-  pageItems.forEach((pageItem) => {
-    pageItem.addEventListener('click', () => {
-      const pageId = pageItem.dataset.pageId; // Берем ID страницы из атрибута
-      if (pageId) {
-        // Переходим на страницу редактирования с передачей ID через URL
-        window.location.href = `add-page.html?pageId=${pageId}`;
-      }
-    });
-  });
-}
-
-
-// Обновляем renderPages для добавления ID в элемент
+// Рендеринг страниц
 function renderPages(filterStatus) {
   pagesList.innerHTML = '';
 
@@ -92,9 +109,8 @@ function renderPages(filterStatus) {
   filteredPages.forEach((page) => {
     const pageItem = document.createElement('div');
     pageItem.classList.add('page-item');
-    pageItem.dataset.pageId = page.id; // Устанавливаем ID страницы
+    pageItem.dataset.pageId = page.id;
 
-    // Формируем содержимое страницы
     pageItem.innerHTML = `
       <div>
         <h3>${page.title}</h3>
@@ -104,11 +120,24 @@ function renderPages(filterStatus) {
 
     pagesList.appendChild(pageItem);
   });
-
-  setupPageClickListeners(); // Устанавливаем обработчики клика
 }
 
+// Рендеринг свойств страницы
+function renderPageProperties(properties) {
+  if (!properties || properties.length === 0) return '';
+  return properties.map((property) => {
+    if (property.type === 'text') {
+      return `<p><strong>Текст:</strong> ${property.value}</p>`;
+    } else if (property.type === 'status') {
+      const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
+      const color = statusColors[property.value] || "gray";
+      return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${color};">${property.value}</span></p>`;
+    }
+    return '';
+  }).join('');
+}
 
+// Обработчик кликов по вкладкам статусов
 statusTabs.addEventListener('click', (event) => {
   if (event.target.classList.contains('status-tab')) {
     const selectedStatus = event.target.getAttribute('data-status');
@@ -116,6 +145,7 @@ statusTabs.addEventListener('click', (event) => {
   }
 });
 
+// Проверка авторизации
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById('app').style.display = 'block';
@@ -127,6 +157,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// Открытие страницы для добавления новой страницы
 addPageBtn.addEventListener('click', () => {
   window.location.href = "add-page.html";
 });
