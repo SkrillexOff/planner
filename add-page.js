@@ -1,5 +1,5 @@
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 
 const firebaseConfig = {
@@ -24,12 +24,12 @@ const savePageBtn = document.getElementById("save-page-btn");
 const cancelBtn = document.getElementById("cancel-btn");
 
 // Загрузка статусов из Firebase
-async function loadStatuses() {
-  const statusesSnapshot = await getDocs(collection(db, 'statuses'));
+async function loadStatuses(userUID) {
+  const statusesSnapshot = await getDocs(collection(db, `users/${userUID}/statuses`));
   const statuses = statusesSnapshot.docs.map(doc => doc.data().name);
-  
+
   statuses.forEach(status => {
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.value = status;
     option.textContent = status;
     statusSelect.appendChild(option);
@@ -37,7 +37,7 @@ async function loadStatuses() {
 }
 
 // Сохранение новой страницы
-savePageBtn.addEventListener('click', async () => {
+savePageBtn.addEventListener("click", async () => {
   const title = pageTitle.value.trim();
   const description = pageDescription.value.trim();
   const status = statusSelect.value;
@@ -57,7 +57,7 @@ savePageBtn.addEventListener('click', async () => {
         ]
       };
 
-      await addDoc(collection(db, "pages"), newPage);
+      await addDoc(collection(db, `users/${user.uid}/pages`), newPage);
       window.location.href = "index.html";
     }
   } else {
@@ -66,9 +66,16 @@ savePageBtn.addEventListener('click', async () => {
 });
 
 // Отмена
-cancelBtn.addEventListener('click', () => {
+cancelBtn.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// Загрузка статусов при загрузке страницы
-loadStatuses();
+// Инициализация при загрузке страницы
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loadStatuses(user.uid);
+  } else {
+    alert("Вы не авторизованы!");
+    window.location.href = "login.html";
+  }
+});

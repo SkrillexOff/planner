@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, where, orderBy, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -43,6 +43,11 @@ function logout() {
 
 logoutBtn.addEventListener('click', logout);
 
+// Обработка кнопки "Добавить страницу"
+addPageBtn.addEventListener('click', () => {
+  window.location.href = 'add-page.html';
+});
+
 // Открытие модального окна настроек
 settingsBtn.addEventListener('click', () => {
   settingsModal.style.display = 'block';
@@ -56,9 +61,15 @@ closeSettingsModalBtn.addEventListener('click', () => {
 
 // Загрузка статусов из Firebase
 async function loadStatuses() {
-  const statusesSnapshot = await getDocs(collection(db, 'statuses'));
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
   statuses = statusesSnapshot.docs.map(doc => doc.data().name);
   renderStatuses();
+  renderStatusTabs();
 }
 
 // Рендеринг списка статусов
@@ -75,38 +86,83 @@ function renderStatuses() {
 addStatusBtn.addEventListener('click', async () => {
   const newStatus = newStatusInput.value.trim();
   if (newStatus) {
-    await addDoc(collection(db, 'statuses'), { name: newStatus });
+    const user = auth.currentUser;
+    if (!user) return;
+
+    await addDoc(collection(db, `users/${user.uid}/statuses`), { name: newStatus });
     newStatusInput.value = ''; // Очистка поля ввода
     loadStatuses(); // Перезагружаем список статусов
   }
 });
 
+// Рендеринг вкладок статусов
+function renderStatusTabs() {
+  statusTabs.innerHTML = '';
+
+  statuses.forEach(status => {
+    const tab = document.createElement('button');
+    tab.classList.add('status-tab');
+    tab.textContent = status;
+    tab.dataset.status = status;
+
+    tab.addEventListener('click', () => {
+      renderPages(status);
+    });
+
+    statusTabs.appendChild(tab);
+  });
+
+  // Добавляем вкладку "Все"
+  const allTab = document.createElement('button');
+  allTab.classList.add('status-tab');
+  allTab.textContent = "Все";
+  allTab.dataset.status = "all";
+  allTab.addEventListener('click', () => {
+    renderPages('all');
+  });
+
+  statusTabs.prepend(allTab);
+}
+
+// Создание стандартных статусов для нового пользователя
+async function createDefaultStatuses(user) {
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
+  if (statusesSnapshot.empty) {
+    const defaultStatuses = ["нужно сделать", "в работе", "готово"];
+    for (const status of defaultStatuses) {
+      await addDoc(statusesRef, { name: status });
+    }
+  }
+}
+
 // Загрузка страниц из Firebase
 async function loadPages() {
   const user = auth.currentUser;
-  if (user) {
-    const pagesQuery = query(
-      collection(db, "pages"),
-      where("userUID", "==", user.uid),
-      orderBy("createdAt")
-    );
-    const querySnapshot = await getDocs(pagesQuery);
-    allPages = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    renderPages('all');
-  }
+  if (!user) return;
+
+  const pagesQuery = query(
+    collection(db, `users/${user.uid}/pages`),
+    orderBy("createdAt")
+  );
+
+  const querySnapshot = await getDocs(pagesQuery);
+  allPages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderPages('all');
 }
 
 // Рендеринг страниц
 function renderPages(filterStatus) {
   pagesList.innerHTML = '';
 
-  const filteredPages = allPages.filter((page) => {
+  const filteredPages = allPages.filter(page => {
     if (filterStatus === 'all') return true;
-    const statusProperty = page.properties?.find((prop) => prop.type === 'status');
+    const statusProperty = page.properties?.find(prop => prop.type === 'status');
     return statusProperty && statusProperty.value === filterStatus;
   });
 
-  filteredPages.forEach((page) => {
+  filteredPages.forEach(page => {
     const pageItem = document.createElement('div');
     pageItem.classList.add('page-item');
     pageItem.dataset.pageId = page.id;
@@ -125,7 +181,7 @@ function renderPages(filterStatus) {
 // Рендеринг свойств страницы
 function renderPageProperties(properties) {
   if (!properties || properties.length === 0) return '';
-  return properties.map((property) => {
+  return properties.map(property => {
     if (property.type === 'text') {
       return `<p><strong>Текст:</strong> ${property.value}</p>`;
     } else if (property.type === 'status') {
@@ -137,27 +193,17 @@ function renderPageProperties(properties) {
   }).join('');
 }
 
-// Обработчик кликов по вкладкам статусов
-statusTabs.addEventListener('click', (event) => {
-  if (event.target.classList.contains('status-tab')) {
-    const selectedStatus = event.target.getAttribute('data-status');
-    renderPages(selectedStatus);
-  }
-});
-
 // Проверка авторизации
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async user => {
   if (user) {
     document.getElementById('app').style.display = 'block';
     loginMessage.style.display = 'none';
-    loadPages();
+
+    await createDefaultStatuses(user);
+    await loadStatuses();
+    await loadPages();
   } else {
     document.getElementById('app').style.display = 'none';
     loginMessage.style.display = 'block';
   }
-});
-
-// Открытие страницы для добавления новой страницы
-addPageBtn.addEventListener('click', () => {
-  window.location.href = "add-page.html";
 });
