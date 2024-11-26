@@ -24,6 +24,9 @@ const logoutBtn = document.getElementById('logout-btn');
 const addPageBtn = document.getElementById('add-page-btn');
 const pagesList = document.getElementById('pages-list');
 const loginMessage = document.getElementById('login-message');
+const statusTabs = document.getElementById('status-tabs');
+
+let allPages = []; // Для хранения всех загруженных страниц
 
 // Функция для выхода
 function logout() {
@@ -45,8 +48,23 @@ function renderPageProperties(properties) {
     .map((property) => {
       if (property.type === 'text') {
         return `<p><strong>Текст:</strong> ${property.value}</p>`;
+      } else if (property.type === 'status') {
+        let statusColor;
+        switch (property.value) {
+          case 'нужно сделать':
+            statusColor = 'red';
+            break;
+          case 'в работе':
+            statusColor = 'orange';
+            break;
+          case 'готово':
+            statusColor = 'green';
+            break;
+          default:
+            statusColor = 'gray';
+        }
+        return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${statusColor};">${property.value}</span></p>`;
       }
-      // Можно добавить обработку других типов свойств здесь
       return '';
     })
     .join('');
@@ -62,24 +80,50 @@ async function loadPages() {
       orderBy("createdAt")
     );
     const querySnapshot = await getDocs(pagesQuery);
-    pagesList.innerHTML = '';
+
+    allPages = []; // Сброс перед загрузкой новых данных
     querySnapshot.forEach((doc) => {
-      const page = doc.data();
-      const pageItem = document.createElement('div');
-      pageItem.classList.add('page-item');
-
-      // Формируем содержимое страницы
-      pageItem.innerHTML = `
-        <div>
-          <h3>${page.title}</h3>
-          ${renderPageProperties(page.properties)}
-        </div>
-      `;
-
-      pagesList.appendChild(pageItem);
+      const page = { id: doc.id, ...doc.data() };
+      allPages.push(page);
     });
+
+    renderPages('all'); // Отобразить все страницы по умолчанию
   }
 }
+
+// Функция для отображения страниц на основе выбранного статуса
+function renderPages(filterStatus) {
+  pagesList.innerHTML = '';
+
+  const filteredPages = allPages.filter((page) => {
+    if (filterStatus === 'all') return true;
+    const statusProperty = page.properties?.find((prop) => prop.type === 'status');
+    return statusProperty && statusProperty.value === filterStatus;
+  });
+
+  filteredPages.forEach((page) => {
+    const pageItem = document.createElement('div');
+    pageItem.classList.add('page-item');
+
+    // Формируем содержимое страницы
+    pageItem.innerHTML = `
+      <div>
+        <h3>${page.title}</h3>
+        ${renderPageProperties(page.properties)}
+      </div>
+    `;
+
+    pagesList.appendChild(pageItem);
+  });
+}
+
+// Обработчик смены вкладки
+statusTabs.addEventListener('click', (event) => {
+  if (event.target.classList.contains('status-tab')) {
+    const selectedStatus = event.target.getAttribute('data-status');
+    renderPages(selectedStatus);
+  }
+});
 
 // Проверка авторизации
 onAuthStateChanged(auth, (user) => {
