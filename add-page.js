@@ -25,6 +25,7 @@ const titleInput = document.getElementById('page-title');
 const saveButton = document.getElementById('save-page-btn');
 const addPropertyButton = document.getElementById('add-property-btn');
 const propertiesContainer = document.getElementById('properties-container');
+const cancelButton = document.getElementById('cancel-btn');
 
 // Локальное хранилище свойств
 let properties = [];
@@ -146,6 +147,11 @@ saveButton.addEventListener('click', async () => {
     // Создаем новую страницу
     await addPage();
   }
+});
+
+// Обработчик кнопки "Отмена"
+cancelButton.addEventListener('click', () => {
+    window.location.href = 'index.html'; // Переход на главную страницу
 });
 
 // Обработчик кнопки "Добавить свойство"
