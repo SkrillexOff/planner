@@ -251,9 +251,9 @@ async function editStatus(oldName, newName) {
     }
   });
 
+  await updatePageStatuses(oldName, newName); // Обновляем статус страниц
   loadStatuses();
 }
-
 
 async function deleteStatus(statusName) {
   const user = auth.currentUser;
@@ -268,7 +268,37 @@ async function deleteStatus(statusName) {
     }
   });
 
+  await updatePageStatuses(statusName, null); // Удаляем статус из страниц
   loadStatuses();
+}
+
+async function updatePageStatuses(oldStatus, newStatus) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const pagesQuery = query(
+    collection(db, `users/${user.uid}/pages`),
+    where("properties", "array-contains", { type: "status", value: oldStatus })
+  );
+
+  const pagesSnapshot = await getDocs(pagesQuery);
+
+  pagesSnapshot.forEach(async pageDoc => {
+    const pageData = pageDoc.data();
+    const updatedProperties = pageData.properties.map(prop => {
+      if (prop.type === "status" && prop.value === oldStatus) {
+        return { ...prop, value: newStatus }; // Заменяем старый статус на новый
+      }
+      return prop;
+    }).filter(prop => prop.value !== null); // Убираем удалённые статусы
+
+    await setDoc(doc(db, `users/${user.uid}/pages`, pageDoc.id), {
+      ...pageData,
+      properties: updatedProperties
+    });
+  });
+
+  loadPages(); // Перезагружаем страницы
 }
 
 

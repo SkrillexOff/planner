@@ -10,34 +10,24 @@
 <body>
   <div id="app" style="display: none;">
     <button id="logout-btn">Выйти</button>
-
-    <!-- Кнопка для открытия настроек -->
     <button id="settings-btn">Настройки</button>
 
-    <!-- Модальное окно для управления статусами -->
     <div id="status-settings-modal" style="display: none;">
       <div class="modal-content">
         <h3>Управление статусами</h3>
-        <ul id="status-list">
-          <!-- Статусы будут загружаться динамически -->
-        </ul>
+        <ul id="status-list"></ul>
         <input type="text" id="new-status" placeholder="Новый статус">
         <button id="add-status-btn">Добавить статус</button>
         <button id="close-settings-modal">Закрыть</button>
       </div>
     </div>
     
-    <div id="status-tabs">
-      <!-- Вкладки статусов загружаются динамически -->
-    </div>
-
+    <div id="status-tabs"></div>
     <div id="pages-container">
       <div id="pages-list"></div>
     </div>
-
     <button id="add-page-btn">Добавить страницу</button>
   </div>
-
   <div id="login-message" style="display: none;">
     <p>Пожалуйста, войдите, чтобы продолжить.</p>
   </div>
