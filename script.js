@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, orderBy, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, where, orderBy, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -75,12 +76,40 @@ async function loadStatuses() {
 // Рендеринг списка статусов
 function renderStatuses() {
   statusList.innerHTML = '';
-  statuses.forEach(status => {
+  statuses.forEach((status, index) => {
     const statusItem = document.createElement('li');
-    statusItem.textContent = status;
+    statusItem.classList.add('draggable');
+    statusItem.draggable = true;
+    statusItem.dataset.index = index;
+
+    statusItem.innerHTML = `
+      <span>${status}</span>
+      <button class="edit-status-btn">✏️</button>
+      <button class="delete-status-btn">🗑️</button>
+    `;
+
+    statusItem.querySelector('.edit-status-btn').addEventListener('click', () => {
+      const newName = prompt('Введите новое имя статуса:', status);
+      if (newName && newName.trim() !== '') {
+        editStatus(status, newName.trim());
+      }
+    });
+
+    statusItem.querySelector('.delete-status-btn').addEventListener('click', () => {
+      if (confirm(`Удалить статус "${status}"?`)) {
+        deleteStatus(status);
+      }
+    });
+
+    statusItem.addEventListener('dragstart', handleDragStart);
+    statusItem.addEventListener('dragover', handleDragOver);
+    statusItem.addEventListener('drop', handleDrop);
+    statusItem.addEventListener('dragend', handleDragEnd);
+
     statusList.appendChild(statusItem);
   });
 }
+
 
 // Добавление нового статуса
 addStatusBtn.addEventListener('click', async () => {
@@ -207,3 +236,72 @@ onAuthStateChanged(auth, async user => {
     loginMessage.style.display = 'block';
   }
 });
+
+
+async function editStatus(oldName, newName) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
+  statusesSnapshot.forEach(async docSnapshot => {
+    if (docSnapshot.data().name === oldName) {
+      await setDoc(docSnapshot.ref, { name: newName }, { merge: true });
+    }
+  });
+
+  loadStatuses();
+}
+
+
+async function deleteStatus(statusName) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
+  statusesSnapshot.forEach(async docSnapshot => {
+    if (docSnapshot.data().name === statusName) {
+      await deleteDoc(docSnapshot.ref);
+    }
+  });
+
+  loadStatuses();
+}
+
+
+let dragStartIndex;
+
+function handleDragStart(e) {
+  dragStartIndex = +e.target.dataset.index;
+  e.target.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+}
+
+function handleDrop(e) {
+  const dragEndIndex = +e.target.dataset.index;
+  [statuses[dragStartIndex], statuses[dragEndIndex]] = [statuses[dragEndIndex], statuses[dragStartIndex]];
+  saveStatusOrder();
+  renderStatuses();
+}
+
+function handleDragEnd(e) {
+  e.target.classList.remove('dragging');
+}
+
+async function saveStatusOrder() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
+  statusesSnapshot.forEach(async (docSnapshot, index) => {
+    await setDoc(docSnapshot.ref, { name: statuses[index] }, { merge: true });
+  });
+}
