@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, addDoc, query, where, orderBy, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
   authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
@@ -79,14 +78,22 @@ function renderStatuses() {
   statuses.forEach((status, index) => {
     const statusItem = document.createElement('li');
     statusItem.classList.add('draggable');
-    statusItem.draggable = true;
     statusItem.dataset.index = index;
 
     statusItem.innerHTML = `
       <span>${status}</span>
+      <button class="drag-status-btn">⬍</button>
       <button class="edit-status-btn">✏️</button>
       <button class="delete-status-btn">🗑️</button>
     `;
+
+    const dragBtn = statusItem.querySelector('.drag-status-btn');
+    dragBtn.addEventListener('mousedown', () => {
+      statusItem.draggable = true;
+    });
+    dragBtn.addEventListener('mouseup', () => {
+      statusItem.draggable = false;
+    });
 
     statusItem.querySelector('.edit-status-btn').addEventListener('click', () => {
       const newName = prompt('Введите новое имя статуса:', status);
@@ -109,6 +116,61 @@ function renderStatuses() {
     statusList.appendChild(statusItem);
   });
 }
+
+// Drag-n-Drop функционал
+let dragStartIndex;
+
+function handleDragStart(e) {
+  dragStartIndex = +e.target.dataset.index;
+  e.target.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  const afterElement = getDragAfterElement(e.clientY);
+  if (afterElement) {
+    statusList.insertBefore(document.querySelector('.dragging'), afterElement);
+  }
+}
+
+function handleDrop() {
+  const dragEndIndex = Array.from(statusList.children).indexOf(document.querySelector('.dragging'));
+  [statuses[dragStartIndex], statuses[dragEndIndex]] = [statuses[dragEndIndex], statuses[dragStartIndex]];
+  saveStatusOrder();
+  renderStatuses();
+}
+
+function handleDragEnd(e) {
+  e.target.classList.remove('dragging');
+}
+
+function getDragAfterElement(y) {
+  const draggableElements = [...statusList.querySelectorAll('.draggable:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+async function saveStatusOrder() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+
+  statusesSnapshot.forEach(async (docSnapshot, index) => {
+    await setDoc(docSnapshot.ref, { name: statuses[index] }, { merge: true });
+  });
+}
+
+// Оставшиеся функции (loadPages, renderPages, updatePageStatuses и т.д.) остаются без изменений.
+
 
 
 // Добавление нового статуса
@@ -302,36 +364,3 @@ async function updatePageStatuses(oldStatus, newStatus) {
 }
 
 
-let dragStartIndex;
-
-function handleDragStart(e) {
-  dragStartIndex = +e.target.dataset.index;
-  e.target.classList.add('dragging');
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-}
-
-function handleDrop(e) {
-  const dragEndIndex = +e.target.dataset.index;
-  [statuses[dragStartIndex], statuses[dragEndIndex]] = [statuses[dragEndIndex], statuses[dragStartIndex]];
-  saveStatusOrder();
-  renderStatuses();
-}
-
-function handleDragEnd(e) {
-  e.target.classList.remove('dragging');
-}
-
-async function saveStatusOrder() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
-
-  statusesSnapshot.forEach(async (docSnapshot, index) => {
-    await setDoc(docSnapshot.ref, { name: statuses[index] }, { merge: true });
-  });
-}
