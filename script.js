@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, orderBy, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, orderBy, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -19,11 +19,6 @@ const db = getFirestore(app);
 
 const logoutBtn = document.getElementById('logout-btn');
 const settingsBtn = document.getElementById('settings-btn');
-const settingsModal = document.getElementById('status-settings-modal');
-const statusList = document.getElementById('status-list');
-const addStatusBtn = document.getElementById('add-status-btn');
-const closeSettingsModalBtn = document.getElementById('close-settings-modal');
-const newStatusInput = document.getElementById('new-status');
 const pagesList = document.getElementById('pages-list');
 const statusTabs = document.getElementById('status-tabs');
 const addPageBtn = document.getElementById('add-page-btn');
@@ -43,20 +38,14 @@ function logout() {
 
 logoutBtn.addEventListener('click', logout);
 
-// Обработка кнопки "Добавить страницу"
+// Открытие страницы настроек
+settingsBtn.addEventListener('click', () => {
+  window.location.href = 'settings.html';
+});
+
+// Открытие страницы добавления новой страницы
 addPageBtn.addEventListener('click', () => {
   window.location.href = 'add-page.html';
-});
-
-// Открытие модального окна настроек
-settingsBtn.addEventListener('click', () => {
-  settingsModal.style.display = 'block';
-  loadStatuses();
-});
-
-// Закрытие модального окна
-closeSettingsModalBtn.addEventListener('click', () => {
-  settingsModal.style.display = 'none';
 });
 
 // Загрузка статусов из Firebase
@@ -68,123 +57,8 @@ async function loadStatuses() {
   const statusesSnapshot = await getDocs(statusesRef);
 
   statuses = statusesSnapshot.docs.map(doc => doc.data().name);
-  renderStatuses();
   renderStatusTabs();
 }
-
-// Рендеринг списка статусов
-function renderStatuses() {
-  statusList.innerHTML = '';
-  statuses.forEach((status, index) => {
-    const statusItem = document.createElement('li');
-    statusItem.classList.add('draggable');
-    statusItem.dataset.index = index;
-
-    statusItem.innerHTML = `
-      <span>${status}</span>
-      <button class="drag-status-btn">⬍</button>
-      <button class="edit-status-btn">✏️</button>
-      <button class="delete-status-btn">🗑️</button>
-    `;
-
-    const dragBtn = statusItem.querySelector('.drag-status-btn');
-    dragBtn.addEventListener('mousedown', () => {
-      statusItem.draggable = true;
-    });
-    dragBtn.addEventListener('mouseup', () => {
-      statusItem.draggable = false;
-    });
-
-    statusItem.querySelector('.edit-status-btn').addEventListener('click', () => {
-      const newName = prompt('Введите новое имя статуса:', status);
-      if (newName && newName.trim() !== '') {
-        editStatus(status, newName.trim());
-      }
-    });
-
-    statusItem.querySelector('.delete-status-btn').addEventListener('click', () => {
-      if (confirm(`Удалить статус "${status}"?`)) {
-        deleteStatus(status);
-      }
-    });
-
-    statusItem.addEventListener('dragstart', handleDragStart);
-    statusItem.addEventListener('dragover', handleDragOver);
-    statusItem.addEventListener('drop', handleDrop);
-    statusItem.addEventListener('dragend', handleDragEnd);
-
-    statusList.appendChild(statusItem);
-  });
-}
-
-// Drag-n-Drop функционал
-let dragStartIndex;
-
-function handleDragStart(e) {
-  dragStartIndex = +e.target.dataset.index;
-  e.target.classList.add('dragging');
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  const afterElement = getDragAfterElement(e.clientY);
-  if (afterElement) {
-    statusList.insertBefore(document.querySelector('.dragging'), afterElement);
-  }
-}
-
-function handleDrop() {
-  const dragEndIndex = Array.from(statusList.children).indexOf(document.querySelector('.dragging'));
-  [statuses[dragStartIndex], statuses[dragEndIndex]] = [statuses[dragEndIndex], statuses[dragStartIndex]];
-  saveStatusOrder();
-  renderStatuses();
-}
-
-function handleDragEnd(e) {
-  e.target.classList.remove('dragging');
-}
-
-function getDragAfterElement(y) {
-  const draggableElements = [...statusList.querySelectorAll('.draggable:not(.dragging)')];
-  return draggableElements.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) {
-      return { offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-async function saveStatusOrder() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
-
-  statusesSnapshot.forEach(async (docSnapshot, index) => {
-    await setDoc(docSnapshot.ref, { name: statuses[index] }, { merge: true });
-  });
-}
-
-// Оставшиеся функции (loadPages, renderPages, updatePageStatuses и т.д.) остаются без изменений.
-
-
-
-// Добавление нового статуса
-addStatusBtn.addEventListener('click', async () => {
-  const newStatus = newStatusInput.value.trim();
-  if (newStatus) {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    await addDoc(collection(db, `users/${user.uid}/statuses`), { name: newStatus });
-    newStatusInput.value = ''; // Очистка поля ввода
-    loadStatuses(); // Перезагружаем список статусов
-  }
-});
 
 // Рендеринг вкладок статусов
 function renderStatusTabs() {
@@ -213,19 +87,6 @@ function renderStatusTabs() {
   });
 
   statusTabs.prepend(allTab);
-}
-
-// Создание стандартных статусов для нового пользователя
-async function createDefaultStatuses(user) {
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
-
-  if (statusesSnapshot.empty) {
-    const defaultStatuses = ["нужно сделать", "в работе", "готово"];
-    for (const status of defaultStatuses) {
-      await addDoc(statusesRef, { name: status });
-    }
-  }
 }
 
 // Загрузка страниц из Firebase
@@ -290,7 +151,6 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('app').style.display = 'block';
     loginMessage.style.display = 'none';
 
-    await createDefaultStatuses(user);
     await loadStatuses();
     await loadPages();
   } else {
@@ -298,69 +158,3 @@ onAuthStateChanged(auth, async user => {
     loginMessage.style.display = 'block';
   }
 });
-
-
-async function editStatus(oldName, newName) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
-
-  statusesSnapshot.forEach(async docSnapshot => {
-    if (docSnapshot.data().name === oldName) {
-      await setDoc(docSnapshot.ref, { name: newName }, { merge: true });
-    }
-  });
-
-  await updatePageStatuses(oldName, newName); // Обновляем статус страниц
-  loadStatuses();
-}
-
-async function deleteStatus(statusName) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
-
-  statusesSnapshot.forEach(async docSnapshot => {
-    if (docSnapshot.data().name === statusName) {
-      await deleteDoc(docSnapshot.ref);
-    }
-  });
-
-  await updatePageStatuses(statusName, null); // Удаляем статус из страниц
-  loadStatuses();
-}
-
-async function updatePageStatuses(oldStatus, newStatus) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const pagesQuery = query(
-    collection(db, `users/${user.uid}/pages`),
-    where("properties", "array-contains", { type: "status", value: oldStatus })
-  );
-
-  const pagesSnapshot = await getDocs(pagesQuery);
-
-  pagesSnapshot.forEach(async pageDoc => {
-    const pageData = pageDoc.data();
-    const updatedProperties = pageData.properties.map(prop => {
-      if (prop.type === "status" && prop.value === oldStatus) {
-        return { ...prop, value: newStatus }; // Заменяем старый статус на новый
-      }
-      return prop;
-    }).filter(prop => prop.value !== null); // Убираем удалённые статусы
-
-    await setDoc(doc(db, `users/${user.uid}/pages`, pageDoc.id), {
-      ...pageData,
-      properties: updatedProperties
-    });
-  });
-
-  loadPages(); // Перезагружаем страницы
-}
-
-
