@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, addDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
 
 // Инициализация Firebase
@@ -99,6 +99,7 @@ async function editStatus(oldName, newName) {
     }
   });
 
+  await updatePageStatuses(oldName, newName); // Обновляем статусы в страницах
   loadStatuses(); // Перезагружаем список статусов
 }
 
@@ -119,5 +120,31 @@ async function deleteStatus(statusName) {
   loadStatuses(); // Перезагружаем список статусов
 }
 
-// Загружаем статусы при загрузке страницы
-loadStatuses();
+// Обновление статусов в страницах
+async function updatePageStatuses(oldStatus, newStatus) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const pagesRef = collection(db, `users/${user.uid}/pages`);
+  const pagesSnapshot = await getDocs(pagesRef);
+
+  pagesSnapshot.forEach(async docSnapshot => {
+    const pageData = docSnapshot.data();
+    const statusProperty = pageData.properties.find(prop => prop.type === 'status');
+    
+    if (statusProperty && statusProperty.value === oldStatus) {
+      statusProperty.value = newStatus;
+      await setDoc(docSnapshot.ref, { properties: pageData.properties }, { merge: true });
+    }
+  });
+}
+
+// Проверка авторизации
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loadStatuses();
+  } else {
+    alert("Вы не авторизованы!");
+    window.location.href = 'login.html';
+  }
+});
