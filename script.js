@@ -145,6 +145,16 @@ function renderPageProperties(properties) {
   }).join('');
 }
 
+// Открытие страницы редактирования
+pagesList.addEventListener("click", (event) => {
+  const pageItem = event.target.closest(".page-item");
+  if (!pageItem) return;
+
+  const pageId = pageItem.dataset.pageId;
+  window.location.href = `add-page.html?pageId=${pageId}`;
+});
+
+
 // Проверка авторизации
 onAuthStateChanged(auth, async user => {
   if (user) {
