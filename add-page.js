@@ -36,109 +36,98 @@ async function loadStatuses(userUID) {
     const statusesSnapshot = await getDocs(collection(db, `users/${userUID}/statuses`));
     const statuses = statusesSnapshot.docs.map(doc => doc.data().name);
   
+    // Проверка на наличие статусов, чтобы избежать дублирования
     statuses.forEach(status => {
-      const option = document.createElement("option");
-      option.value = status;
-      option.textContent = status;
-      statusSelect.appendChild(option);
+        const option = document.createElement("option");
+        option.value = status;
+        option.textContent = status;
+        // Добавляем опцию только если она еще не существует в select
+        if (![...statusSelect.options].some(opt => opt.value === status)) {
+            statusSelect.appendChild(option);
+        }
     });
   
     // Установить статус страницы после загрузки статусов
     if (pageId) {
-      await loadPageStatus(userUID);
+        await loadPageStatus(userUID);
     }
-  }
-  
-  
-  // Загрузка статуса страницы
-  async function loadPageStatus(userUID) {
+}
+
+// Загрузка статуса страницы
+async function loadPageStatus(userUID) {
     const pageDoc = await getDoc(doc(db, `users/${userUID}/pages`, pageId));
     if (pageDoc.exists()) {
-      const pageData = pageDoc.data();
-      if (pageData.status) {
-        statusSelect.value = pageData.status;
-      }
+        const pageData = pageDoc.data();
+        if (pageData.status) {
+            statusSelect.value = pageData.status;
+        }
     }
-  }
-  
-  // Загрузка данных страницы для редактирования
-  async function loadPageData(pageId, userUID) {
+}
+
+// Загрузка данных страницы для редактирования
+async function loadPageData(pageId, userUID) {
     const pageDoc = await getDoc(doc(db, `users/${userUID}/pages`, pageId));
     if (pageDoc.exists()) {
-      const pageData = pageDoc.data();
-      pageTitle.value = pageData.title || "";
-      pageDescription.value = pageData.description || "";
-      // Статус подставляется после загрузки через loadPageStatus
+        const pageData = pageDoc.data();
+        pageTitle.value = pageData.title || "";
+        pageDescription.value = pageData.description || "";
+        // Статус подставляется после загрузки через loadPageStatus
     } else {
-      alert("Страница не найдена!");
-      window.location.href = "index.html";
+        alert("Страница не найдена!");
+        window.location.href = "index.html";
     }
-  }
-  
-  // Инициализация при загрузке страницы
-  onAuthStateChanged(auth, async (user) => {
+}
+
+// Инициализация при загрузке страницы
+onAuthStateChanged(auth, async (user) => {
     if (user) {
-      await loadStatuses(user.uid); // Загружаем статусы, а затем статус страницы
-      if (pageId) {
-        await loadPageData(pageId, user.uid);
-      }
+        await loadStatuses(user.uid); // Загружаем статусы, а затем статус страницы
+        if (pageId) {
+            await loadPageData(pageId, user.uid);
+        }
     } else {
-      alert("Вы не авторизованы!");
-      window.location.href = "login.html";
+        alert("Вы не авторизованы!");
+        window.location.href = "login.html";
     }
-  });
-  
+});
 
 // Сохранение страницы (новой или редактируемой)
 savePageBtn.addEventListener("click", async () => {
-  const title = pageTitle.value.trim();
-  const description = pageDescription.value.trim();
-  const status = statusSelect.value;
+    const title = pageTitle.value.trim();
+    const description = pageDescription.value.trim();
+    const status = statusSelect.value;
 
-  if (title && status) {
-    const user = auth.currentUser;
-    if (user) {
-      const pageData = {
-        title,
-        description,
-        status,
-        properties: [
-          { type: "status", value: status },
-          { type: "text", value: description }
-        ],
-        updatedAt: new Date()
-      };
+    if (title && status) {
+        const user = auth.currentUser;
+        if (user) {
+            const pageData = {
+                title,
+                description,
+                status,
+                properties: [
+                    { type: "status", value: status },
+                    { type: "text", value: description }
+                ],
+                updatedAt: new Date()
+            };
 
-      if (pageId) {
-        // Обновляем существующую страницу
-        await setDoc(doc(db, `users/${user.uid}/pages`, pageId), pageData, { merge: true });
-      } else {
-        // Создаём новую страницу
-        pageData.createdAt = new Date();
-        await addDoc(collection(db, `users/${user.uid}/pages`), pageData);
-      }
+            if (pageId) {
+                // Обновляем существующую страницу
+                await setDoc(doc(db, `users/${user.uid}/pages`, pageId), pageData, { merge: true });
+            } else {
+                // Создаём новую страницу
+                pageData.createdAt = new Date();
+                await addDoc(collection(db, `users/${user.uid}/pages`), pageData);
+            }
 
-      window.location.href = "index.html";
+            window.location.href = "index.html";
+        }
+    } else {
+        alert("Пожалуйста, заполните все обязательные поля.");
     }
-  } else {
-    alert("Пожалуйста, заполните все обязательные поля.");
-  }
 });
 
 // Отмена
 cancelBtn.addEventListener("click", () => {
-  window.location.href = "index.html";
-});
-
-// Инициализация при загрузке страницы
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    await loadStatuses(user.uid);
-    if (pageId) {
-      await loadPageData(pageId, user.uid);
-    }
-  } else {
-    alert("Вы не авторизованы!");
-    window.location.href = "login.html";
-  }
+    window.location.href = "index.html";
 });
