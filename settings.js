@@ -53,8 +53,11 @@ function renderStatuses(statuses) {
       <span>${status}</span>
       <button class="edit-status-btn">✏️</button>
       <button class="delete-status-btn">🗑️</button>
+      <button class="move-up-btn">↑</button>
+      <button class="move-down-btn">↓</button>
     `;
 
+    // Обработчики для кнопок редактирования и удаления
     statusItem.querySelector('.edit-status-btn').addEventListener('click', () => {
       const newName = prompt('Введите новое имя статуса:', status);
       if (newName && newName.trim() !== '') {
@@ -66,6 +69,15 @@ function renderStatuses(statuses) {
       if (confirm(`Удалить статус "${status}"?`)) {
         deleteStatus(status);
       }
+    });
+
+    // Обработчики для кнопок перемещения
+    statusItem.querySelector('.move-up-btn').addEventListener('click', () => {
+      moveStatusUp(index);
+    });
+
+    statusItem.querySelector('.move-down-btn').addEventListener('click', () => {
+      moveStatusDown(index);
     });
 
     statusList.appendChild(statusItem);
@@ -137,6 +149,51 @@ async function updatePageStatuses(oldStatus, newStatus) {
       await setDoc(docSnapshot.ref, { properties: pageData.properties }, { merge: true });
     }
   });
+}
+
+// Перемещение статуса вверх
+async function moveStatusUp(index) {
+  const statusesRef = collection(db, `users/${auth.currentUser.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+  const statuses = statusesSnapshot.docs.map(doc => doc.data().name);
+
+  if (index > 0) {
+    const temp = statuses[index];
+    statuses[index] = statuses[index - 1];
+    statuses[index - 1] = temp;
+    await updateStatusesInDatabase(statuses); // Обновляем статусы в базе данных
+  }
+}
+
+// Перемещение статуса вниз
+async function moveStatusDown(index) {
+  const statusesRef = collection(db, `users/${auth.currentUser.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+  const statuses = statusesSnapshot.docs.map(doc => doc.data().name);
+
+  if (index < statuses.length - 1) {
+    const temp = statuses[index];
+    statuses[index] = statuses[index + 1];
+    statuses[index + 1] = temp;
+    await updateStatusesInDatabase(statuses); // Обновляем статусы в базе данных
+  }
+}
+
+// Обновление порядка статусов в базе данных
+async function updateStatusesInDatabase(statuses) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const statusesRef = collection(db, `users/${user.uid}/statuses`);
+  const statusesSnapshot = await getDocs(statusesRef);
+  const docRefs = statusesSnapshot.docs.map(doc => doc.ref);
+
+  // Обновляем каждый документ в базе данных с новым порядком
+  for (let i = 0; i < statuses.length; i++) {
+    await setDoc(docRefs[i], { name: statuses[i] }, { merge: true });
+  }
+
+  loadStatuses(); // Перезагружаем список статусов
 }
 
 // Проверка авторизации
