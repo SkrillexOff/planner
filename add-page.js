@@ -33,15 +33,11 @@ async function loadStatuses(userUID) {
     statusSelect.innerHTML = "";
 
     const statusesSnapshot = await getDocs(collection(db, `users/${userUID}/statuses`));
-    const statuses = statusesSnapshot.docs.map(doc => doc.data().name);
-
-    statuses.forEach(status => {
+    statusesSnapshot.forEach(doc => {
         const option = document.createElement("option");
-        option.value = status;
-        option.textContent = status;
-        if (![...statusSelect.options].some(opt => opt.value === status)) {
-            statusSelect.appendChild(option);
-        }
+        option.value = doc.id; // Используем ID статуса
+        option.textContent = doc.data().name;
+        statusSelect.appendChild(option);
     });
 
     if (pageId) {
@@ -54,8 +50,8 @@ async function loadPageStatus(userUID) {
     const pageDoc = await getDoc(doc(db, `users/${userUID}/pages`, pageId));
     if (pageDoc.exists()) {
         const pageData = pageDoc.data();
-        if (pageData.properties && pageData.properties[0]?.type === "status") {
-            statusSelect.value = pageData.properties[0].value;
+        if (pageData.status) {
+            statusSelect.value = pageData.status;
         }
     }
 }
@@ -98,10 +94,7 @@ savePageBtn.addEventListener("click", async () => {
             const pageData = {
                 title,
                 description,
-                properties: [
-                    { type: "status", value: status },
-                    { type: "text", value: description }
-                ],
+                status, // Сохраняем ID статуса
                 updatedAt: new Date()
             };
 

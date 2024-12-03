@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, query, orderBy, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -56,7 +56,11 @@ async function loadStatuses() {
   const statusesRef = collection(db, `users/${user.uid}/statuses`);
   const statusesSnapshot = await getDocs(statusesRef);
 
-  statuses = statusesSnapshot.docs.map(doc => doc.data().name);
+  statuses = statusesSnapshot.docs.map(doc => ({
+    id: doc.id,
+    name: doc.data().name
+  }));
+
   renderStatusTabs();
 }
 
@@ -67,11 +71,11 @@ function renderStatusTabs() {
   statuses.forEach(status => {
     const tab = document.createElement('button');
     tab.classList.add('status-tab');
-    tab.textContent = status;
-    tab.dataset.status = status;
+    tab.textContent = status.name;
+    tab.dataset.status = status.id;
 
     tab.addEventListener('click', () => {
-      renderPages(status);
+      renderPages(status.id);
     });
 
     statusTabs.appendChild(tab);
@@ -110,8 +114,7 @@ function renderPages(filterStatus) {
 
   const filteredPages = allPages.filter(page => {
     if (filterStatus === 'all') return true;
-    const statusProperty = page.properties?.find(prop => prop.type === 'status');
-    return statusProperty && statusProperty.value === filterStatus;
+    return page.status === filterStatus;
   });
 
   filteredPages.forEach(page => {
@@ -122,7 +125,8 @@ function renderPages(filterStatus) {
     pageItem.innerHTML = `
       <div>
         <h3>${page.title}</h3>
-        ${renderPageProperties(page.properties)}
+        <p><strong>Описание:</strong> ${page.description || 'Нет описания'}</p>
+        <p><strong>Статус:</strong> ${renderStatusLabel(page.status)}</p>
       </div>
     `;
 
@@ -130,19 +134,14 @@ function renderPages(filterStatus) {
   });
 }
 
-// Рендеринг свойств страницы
-function renderPageProperties(properties) {
-  if (!properties || properties.length === 0) return '';
-  return properties.map(property => {
-    if (property.type === 'text') {
-      return `<p><strong>Текст:</strong> ${property.value}</p>`;
-    } else if (property.type === 'status') {
-      const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
-      const color = statusColors[property.value] || "gray";
-      return `<p><strong>Статус:</strong> <span class="status-label" style="background-color: ${color};">${property.value}</span></p>`;
-    }
-    return '';
-  }).join('');
+// Рендеринг метки статуса
+function renderStatusLabel(statusId) {
+  const status = statuses.find(s => s.id === statusId);
+  if (!status) return '<span class="status-label" style="background-color: gray;">Неизвестно</span>';
+  
+  const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
+  const color = statusColors[status.name] || "gray";
+  return `<span class="status-label" style="background-color: ${color};">${status.name}</span>`;
 }
 
 // Открытие страницы редактирования
@@ -153,7 +152,6 @@ pagesList.addEventListener("click", (event) => {
   const pageId = pageItem.dataset.pageId;
   window.location.href = `add-page.html?pageId=${pageId}`;
 });
-
 
 // Проверка авторизации
 onAuthStateChanged(auth, async user => {
