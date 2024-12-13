@@ -28,15 +28,30 @@ const cancelBtn = document.getElementById("cancel-btn");
 const urlParams = new URLSearchParams(window.location.search);
 const pageId = urlParams.get("pageId");
 
-// Загрузка статусов из Firebase
+// Загрузка статусов из Firebase с сортировкой
 async function loadStatuses(userUID) {
     statusSelect.innerHTML = "";
 
     const statusesSnapshot = await getDocs(collection(db, `users/${userUID}/statuses`));
+    const statuses = [];
+
     statusesSnapshot.forEach(doc => {
+        const data = doc.data();
+        statuses.push({
+            id: doc.id,       // ID статуса
+            name: data.name,  // Имя статуса
+            order: data.order // Порядок статуса
+        });
+    });
+
+    // Сортируем статусы по полю order
+    statuses.sort((a, b) => a.order - b.order);
+
+    // Добавляем отсортированные статусы в селектор
+    statuses.forEach(status => {
         const option = document.createElement("option");
-        option.value = doc.id; // Используем ID статуса
-        option.textContent = doc.data().name;
+        option.value = status.id;
+        option.textContent = status.name;
         statusSelect.appendChild(option);
     });
 
@@ -44,6 +59,7 @@ async function loadStatuses(userUID) {
         await loadPageStatus(userUID);
     }
 }
+
 
 // Загрузка статуса страницы
 async function loadPageStatus(userUID) {

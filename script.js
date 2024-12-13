@@ -48,21 +48,24 @@ addPageBtn.addEventListener('click', () => {
   window.location.href = 'add-page.html';
 });
 
-// Загрузка статусов из Firebase
+// Загрузка статусов из Firebase с сортировкой
 async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
   const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
+  const statusesQuery = query(statusesRef, orderBy("order"));
+  const statusesSnapshot = await getDocs(statusesQuery);
 
   statuses = statusesSnapshot.docs.map(doc => ({
     id: doc.id,
-    name: doc.data().name
+    name: doc.data().name,
+    order: doc.data().order // Используем порядок для дальнейшей работы
   }));
 
   renderStatusTabs();
 }
+
 
 // Рендеринг вкладок статусов
 function renderStatusTabs() {
