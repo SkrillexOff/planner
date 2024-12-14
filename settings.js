@@ -18,6 +18,14 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Получение baseId из URL
+const urlParams = new URLSearchParams(window.location.search);
+const baseId = urlParams.get("baseId");
+if (!baseId) {
+  alert("Ошибка: baseId не указан в URL.");
+  window.location.href = "index.html";
+}
+
 // Элементы страницы
 const backBtn = document.getElementById('back-btn');
 const statusList = document.getElementById('status-list');
@@ -37,10 +45,9 @@ async function loadStatuses() {
   const statusesRef = collection(db, `users/${user.uid}/statuses`);
   const statusesSnapshot = await getDocs(statusesRef);
 
-  const statuses = statusesSnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  const statuses = statusesSnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .filter(status => status.baseId === baseId); // Фильтруем по baseId
 
   // Сортируем статусы по полю `order`
   statuses.sort((a, b) => a.order - b.order);
@@ -105,7 +112,7 @@ addStatusBtn.addEventListener('click', async () => {
 
     const newOrder = statusesSnapshot.docs.length;
 
-    await setDoc(doc(statusesRef), { name: newStatus, order: newOrder });
+    await setDoc(doc(statusesRef), { name: newStatus, order: newOrder, baseId }); // Добавляем baseId
     newStatusInput.value = '';
     loadStatuses();
   }

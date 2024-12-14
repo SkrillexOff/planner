@@ -27,6 +27,15 @@ const loginMessage = document.getElementById('login-message');
 let allPages = [];
 let statuses = [];
 
+// Получение baseId из URL
+const urlParams = new URLSearchParams(window.location.search);
+const baseId = urlParams.get('baseId');
+
+if (!baseId) {
+  alert('Base ID не найден. Вернитесь на страницу выбора базы.');
+  window.location.href = 'bases.html'; // Перенаправление обратно
+}
+
 // Функция для выхода
 function logout() {
   signOut(auth).then(() => {
@@ -40,30 +49,36 @@ logoutBtn.addEventListener('click', logout);
 
 // Открытие страницы настроек
 settingsBtn.addEventListener('click', () => {
-  window.location.href = 'settings.html';
+  window.location.href = `settings.html?baseId=${baseId}`;
 });
 
 // Открытие страницы добавления новой страницы
 addPageBtn.addEventListener('click', () => {
-  window.location.href = 'add-page.html';
+  window.location.href = `add-page.html?baseId=${baseId}`;
 });
 
-// Загрузка статусов из Firebase с сортировкой
+// Загрузка статусов из Firebase с сортировкой и фильтрацией по baseId
 async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesQuery = query(statusesRef, orderBy("order"));
-  const statusesSnapshot = await getDocs(statusesQuery);
+  try {
+    const statusesRef = collection(db, `users/${user.uid}/statuses`);
+    const statusesQuery = query(statusesRef, orderBy("order"));
+    const statusesSnapshot = await getDocs(statusesQuery);
 
-  statuses = statusesSnapshot.docs.map(doc => ({
-    id: doc.id,
-    name: doc.data().name,
-    order: doc.data().order // Используем порядок для дальнейшей работы
-  }));
+    statuses = statusesSnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(status => status.baseId === baseId); // Фильтруем по baseId
 
-  renderStatusTabs();
+    renderStatusTabs();
+  } catch (error) {
+    console.error('Ошибка при загрузке статусов:', error);
+    alert('Не удалось загрузить статусы. Пожалуйста, проверьте соединение или попробуйте позже.');
+  }
 }
 
 
@@ -84,7 +99,6 @@ function renderStatusTabs() {
     statusTabs.appendChild(tab);
   });
 
-  // Добавляем вкладку "Все"
   const allTab = document.createElement('button');
   allTab.classList.add('status-tab');
   allTab.textContent = "Все";
@@ -96,28 +110,38 @@ function renderStatusTabs() {
   statusTabs.prepend(allTab);
 }
 
-// Загрузка страниц из Firebase
+// Загрузка страниц из Firebase с фильтрацией по baseId
 async function loadPages() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const pagesQuery = query(
-    collection(db, `users/${user.uid}/pages`),
-    orderBy("createdAt")
-  );
+  try {
+    const pagesQuery = query(
+      collection(db, `users/${user.uid}/pages`),
+      orderBy("createdAt")
+    );
 
-  const querySnapshot = await getDocs(pagesQuery);
-  allPages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderPages('all');
+    const querySnapshot = await getDocs(pagesQuery);
+
+    // Фильтруем только те страницы, у которых baseId совпадает
+    allPages = querySnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(page => page.baseId === baseId); // Фильтрация по baseId
+
+    renderPages('all');
+  } catch (error) {
+    console.error('Ошибка при загрузке страниц:', error);
+    alert('Не удалось загрузить страницы. Проверьте подключение.');
+  }
 }
 
-// Рендеринг страниц
+// Рендеринг страниц с учётом фильтрации по статусу
 function renderPages(filterStatus) {
   pagesList.innerHTML = '';
 
   const filteredPages = allPages.filter(page => {
-    if (filterStatus === 'all') return true;
-    return page.status === filterStatus;
+    if (filterStatus === 'all') return true; // Показываем все страницы
+    return page.status === filterStatus; // Фильтруем по статусу
   });
 
   filteredPages.forEach(page => {
@@ -141,7 +165,7 @@ function renderPages(filterStatus) {
 function renderStatusLabel(statusId) {
   const status = statuses.find(s => s.id === statusId);
   if (!status) return '<span class="status-label" style="background-color: gray;">Неизвестно</span>';
-  
+
   const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
   const color = statusColors[status.name] || "gray";
   return `<span class="status-label" style="background-color: ${color};">${status.name}</span>`;
@@ -153,7 +177,7 @@ pagesList.addEventListener("click", (event) => {
   if (!pageItem) return;
 
   const pageId = pageItem.dataset.pageId;
-  window.location.href = `add-page.html?pageId=${pageId}`;
+  window.location.href = `add-page.html?pageId=${pageId}&baseId=${baseId}`;
 });
 
 // Проверка авторизации

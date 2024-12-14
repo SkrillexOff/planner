@@ -27,7 +27,7 @@ loginButton.addEventListener('click', async () => {
   
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "index.html";  // Перенаправление после входа
+    window.location.href = "bases.html";  // Перенаправление после входа
   } catch (error) {
     console.error("Error logging in: ", error.message);
   }
@@ -39,7 +39,7 @@ registerButton.addEventListener('click', async () => {
   
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-    window.location.href = "index.html";  // Перенаправление после регистрации
+    window.location.href = "bases.html";  // Перенаправление после регистрации
   } catch (error) {
     console.error("Error registering: ", error.message);
   }
@@ -48,6 +48,6 @@ registerButton.addEventListener('click', async () => {
 // Проверка авторизации
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    window.location.href = "index.html";  // Если пользователь авторизован, перенаправляем на главную
+    window.location.href = "bases.html";  // Если пользователь авторизован, перенаправляем на главную
   }
 });

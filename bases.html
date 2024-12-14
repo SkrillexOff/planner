@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bases</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="bases.js" defer></script>
+</head>
+<body>
+  <header>
+    <button id="logout-btn">Выход</button>
+    <button id="create-base-btn">Создать базу</button>
+  </header>
+
+  <main>
+    <h1>Ваши базы</h1>
+    <ul id="bases-list"></ul>
+  </main>
+
+  <!-- Модальное окно -->
+  <div id="modal" class="hidden">
+    <div class="modal-content">
+      <h2>Создать базу</h2>
+      <input type="text" id="base-name" placeholder="Введите название базы">
+      <button id="save-base-btn">Создать базу</button>
+      <button id="close-modal-btn">Закрыть</button>
+    </div>
+  </div>
+
+  <style>
+    /* Добавьте базовые стили */
+    .hidden { display: none; }
+    .modal-content { 
+      background: white; 
+      padding: 20px; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+    }
+  </style>
+</body>
+</html>
