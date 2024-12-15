@@ -84,11 +84,11 @@ async function loadPageData(userUID) {
             pageDescription.value = pageData.description || "";
         } else {
             alert("Страница не найдена в данной базе!");
-            window.location.href = "index.html";
+            window.location.href = `index.html?baseId=${baseId}`;
         }
     } else {
         alert("Страница не найдена!");
-        window.location.href = "index.html";
+        window.location.href = `index.html?baseId=${baseId}`;
     }
 }
 
@@ -101,7 +101,7 @@ onAuthStateChanged(auth, async (user) => {
         }
     } else {
         alert("Вы не авторизованы!");
-        window.location.href = "login.html";
+        window.location.href = "auth.html";
     }
 });
 
@@ -129,7 +129,7 @@ savePageBtn.addEventListener("click", async () => {
                 await addDoc(collection(db, `users/${user.uid}/pages`), pageData);
             }
 
-            window.location.href = "index.html";
+            window.location.href = `index.html?baseId=${baseId}`
         }
     } else {
         alert("Пожалуйста, заполните все обязательные поля.");
@@ -138,5 +138,5 @@ savePageBtn.addEventListener("click", async () => {
 
 // Отмена
 cancelBtn.addEventListener("click", () => {
-    window.location.href = "index.html";
+    window.location.href = `index.html?baseId=${baseId}`
 });

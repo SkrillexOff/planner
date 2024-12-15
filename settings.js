@@ -34,7 +34,7 @@ const addStatusBtn = document.getElementById('add-status-btn');
 
 // Переход назад
 backBtn.addEventListener('click', () => {
-  window.location.href = 'index.html';
+  window.location.href = `index.html?baseId=${baseId}`
 });
 
 // Загрузка статусов из базы данных
@@ -164,6 +164,6 @@ onAuthStateChanged(auth, (user) => {
     loadStatuses();
   } else {
     alert("Вы не авторизованы!");
-    window.location.href = 'login.html';
+    window.location.href = 'auth.html';
   }
 });
