@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const logoutBtn = document.getElementById('logout-btn');
+const backBtn = document.getElementById('back-btn');
 const settingsBtn = document.getElementById('settings-btn');
 const pagesList = document.getElementById('pages-list');
 const statusTabs = document.getElementById('status-tabs');
@@ -36,16 +36,10 @@ if (!baseId) {
   window.location.href = 'bases.html'; // Перенаправление обратно
 }
 
-// Функция для выхода
-function logout() {
-  signOut(auth).then(() => {
-    window.location.href = "auth.html";
-  }).catch((error) => {
-    console.error('Error:', error.message);
-  });
-}
-
-logoutBtn.addEventListener('click', logout);
+// Переход на страницу выбора баз
+backBtn.addEventListener('click', () => {
+  window.location.href = 'bases.html';
+});
 
 // Открытие страницы настроек
 settingsBtn.addEventListener('click', () => {
@@ -80,7 +74,6 @@ async function loadStatuses() {
     alert('Не удалось загрузить статусы. Пожалуйста, проверьте соединение или попробуйте позже.');
   }
 }
-
 
 // Рендеринг вкладок статусов
 function renderStatusTabs() {
