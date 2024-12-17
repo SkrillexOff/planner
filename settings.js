@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
 
 // Firebase инициализация
 const firebaseConfig = {
@@ -42,17 +42,21 @@ async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const statusesRef = collection(db, `users/${user.uid}/statuses`);
-  const statusesSnapshot = await getDocs(statusesRef);
+  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
 
-  const statuses = statusesSnapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .filter(status => status.baseId === baseId); // Фильтруем по baseId
+  if (baseSnap.exists()) {
+    const statuses = baseSnap.data().statuses || {}; // Получаем объект статусов
+    const statusesArray = Object.entries(statuses).map(([id, data]) => ({ id, ...data }));
 
-  // Сортируем статусы по полю `order`
-  statuses.sort((a, b) => a.order - b.order);
+    // Сортируем статусы по полю `order`
+    statusesArray.sort((a, b) => a.order - b.order);
 
-  renderStatuses(statuses);
+    renderStatuses(statusesArray);
+  } else {
+    alert("База не найдена.");
+    window.location.href = "index.html";
+  }
 }
 
 // Рендеринг списка статусов
@@ -107,14 +111,23 @@ addStatusBtn.addEventListener('click', async () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const statusesRef = collection(db, `users/${user.uid}/statuses`);
-    const statusesSnapshot = await getDocs(statusesRef);
+    const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
 
-    const newOrder = statusesSnapshot.docs.length;
+    if (baseSnap.exists()) {
+      const statuses = baseSnap.data().statuses || {};
+      const newId = `${Date.now()}`; // Генерируем уникальный id
+      const newOrder = Object.keys(statuses).length;
 
-    await setDoc(doc(statusesRef), { name: newStatus, order: newOrder, baseId }); // Добавляем baseId
-    newStatusInput.value = '';
-    loadStatuses();
+      statuses[newId] = { name: newStatus, order: newOrder };
+
+      await updateDoc(baseRef, { statuses });
+      newStatusInput.value = '';
+      loadStatuses();
+    } else {
+      alert("База не найдена.");
+      window.location.href = "index.html";
+    }
   }
 });
 
@@ -123,10 +136,17 @@ async function editStatus(id, newName) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const statusRef = doc(db, `users/${user.uid}/statuses`, id);
-  await setDoc(statusRef, { name: newName }, { merge: true });
+  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
 
-  loadStatuses();
+  if (baseSnap.exists()) {
+    const statuses = baseSnap.data().statuses || {};
+    if (statuses[id]) {
+      statuses[id].name = newName;
+      await updateDoc(baseRef, { statuses });
+      loadStatuses();
+    }
+  }
 }
 
 // Удаление статуса
@@ -134,10 +154,17 @@ async function deleteStatus(id) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const statusRef = doc(db, `users/${user.uid}/statuses`, id);
-  await deleteDoc(statusRef);
+  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
 
-  loadStatuses();
+  if (baseSnap.exists()) {
+    const statuses = baseSnap.data().statuses || {};
+    if (statuses[id]) {
+      delete statuses[id];
+      await updateDoc(baseRef, { statuses });
+      loadStatuses();
+    }
+  }
 }
 
 // Обновление порядка статусов
@@ -145,17 +172,25 @@ async function swapOrders(statuses, fromIndex, toIndex) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const fromStatus = statuses[fromIndex];
-  const toStatus = statuses[toIndex];
+  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
 
-  // Меняем порядок в базе данных
-  const fromStatusRef = doc(db, `users/${user.uid}/statuses`, fromStatus.id);
-  const toStatusRef = doc(db, `users/${user.uid}/statuses`, toStatus.id);
+  if (baseSnap.exists()) {
+    const statusesMap = baseSnap.data().statuses || {};
+    const fromStatus = statuses[fromIndex];
+    const toStatus = statuses[toIndex];
 
-  await setDoc(fromStatusRef, { order: toIndex }, { merge: true });
-  await setDoc(toStatusRef, { order: fromIndex }, { merge: true });
+    // Меняем порядок местами
+    const tempOrder = fromStatus.order;
+    fromStatus.order = toStatus.order;
+    toStatus.order = tempOrder;
 
-  loadStatuses();
+    statusesMap[fromStatus.id] = fromStatus;
+    statusesMap[toStatus.id] = toStatus;
+
+    await updateDoc(baseRef, { statuses: statusesMap });
+    loadStatuses();
+  }
 }
 
 // Проверка авторизации

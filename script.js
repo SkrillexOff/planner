@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -51,27 +51,31 @@ addPageBtn.addEventListener('click', () => {
   window.location.href = `add-page.html?baseId=${baseId}`;
 });
 
-// Загрузка статусов из Firebase с сортировкой и фильтрацией по baseId
+// Загрузка статусов из Firebase (типа Map)
 async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
   try {
-    const statusesRef = collection(db, `users/${user.uid}/statuses`);
-    const statusesQuery = query(statusesRef, orderBy("order"));
-    const statusesSnapshot = await getDocs(statusesQuery);
+    const statusesRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+    const statusesDoc = await getDoc(statusesRef);
 
-    statuses = statusesSnapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      .filter(status => status.baseId === baseId); // Фильтруем по baseId
+    if (statusesDoc.exists()) {
+      const data = statusesDoc.data();
 
-    renderStatusTabs();
+      // Преобразование объекта статусов в массив и сортировка по 'order'
+      statuses = Object.entries(data.statuses || {}).map(([id, status]) => ({
+        id,
+        ...status,
+      })).sort((a, b) => (a.order || 0) - (b.order || 0)); // Сортировка по order
+
+      renderStatusTabs();
+    } else {
+      console.warn('Документ базы не найден или статусы отсутствуют.');
+    }
   } catch (error) {
     console.error('Ошибка при загрузке статусов:', error);
-    alert('Не удалось загрузить статусы. Пожалуйста, проверьте соединение или попробуйте позже.');
+    alert('Не удалось загрузить статусы. Проверьте подключение.');
   }
 }
 
@@ -100,33 +104,36 @@ function renderStatusTabs() {
     renderPages('all');
   });
 
-  statusTabs.prepend(allTab);
+  statusTabs.prepend(allTab); // Кнопка "Все" всегда первая
 }
 
-// Загрузка страниц из Firebase с фильтрацией по baseId
+
+// Загрузка страниц из Firebase (типа Map)
 async function loadPages() {
   const user = auth.currentUser;
   if (!user) return;
 
   try {
-    const pagesQuery = query(
-      collection(db, `users/${user.uid}/pages`),
-      orderBy("createdAt")
-    );
+    const pagesRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+    const pagesDoc = await getDoc(pagesRef);
 
-    const querySnapshot = await getDocs(pagesQuery);
+    if (pagesDoc.exists()) {
+      const data = pagesDoc.data();
+      allPages = Object.entries(data.pages || {}).map(([id, page]) => ({
+        id,
+        ...page,
+      }));
 
-    // Фильтруем только те страницы, у которых baseId совпадает
-    allPages = querySnapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(page => page.baseId === baseId); // Фильтрация по baseId
-
-    renderPages('all');
+      renderPages('all');
+    } else {
+      console.warn('Документ базы не найден или страницы отсутствуют.');
+    }
   } catch (error) {
     console.error('Ошибка при загрузке страниц:', error);
     alert('Не удалось загрузить страницы. Проверьте подключение.');
   }
 }
+
 
 // Рендеринг страниц с учётом фильтрации по статусу
 function renderPages(filterStatus) {

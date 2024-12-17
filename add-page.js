@@ -1,16 +1,24 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    getDoc,
+    doc,
+    setDoc,
+    query,
+    where,
+} from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
     authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
-    databaseURL: "https://taskcalendarapp-bf3b3-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "taskcalendarapp-bf3b3",
     storageBucket: "taskcalendarapp-bf3b3.firebasestorage.app",
     messagingSenderId: "482463811896",
     appId: "1:482463811896:web:11700779551db85f8c59cd",
-    measurementId: "G-4V1NYWDVKF"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -31,41 +39,48 @@ const baseId = urlParams.get("baseId");
 
 // Загрузка статусов из Firebase с учётом baseId
 async function loadStatuses(userUID) {
-    statusSelect.innerHTML = "";
+    statusSelect.innerHTML = ""; // Очищаем селектор перед загрузкой
 
-    const statusesRef = collection(db, `users/${userUID}/statuses`);
-    const statusesQuery = query(statusesRef, where("baseId", "==", baseId));
-    const statusesSnapshot = await getDocs(statusesQuery);
+    // Получаем документ базы
+    const baseRef = doc(db, `users/${userUID}/bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
 
-    const statuses = [];
-    statusesSnapshot.forEach(doc => {
-        const data = doc.data();
-        statuses.push({
-            id: doc.id,
+    if (baseSnap.exists()) {
+        const baseData = baseSnap.data();
+        const statuses = baseData.statuses || {};
+
+        // Преобразуем объект статусов в массив для сортировки
+        const statusesArray = Object.entries(statuses).map(([id, data]) => ({
+            id,
             name: data.name,
             order: data.order
+        }));
+
+        // Сортируем статусы по полю order
+        statusesArray.sort((a, b) => a.order - b.order);
+
+        // Добавляем статусы в селектор
+        statusesArray.forEach(status => {
+            const option = document.createElement("option");
+            option.value = status.id;
+            option.textContent = status.name;
+            statusSelect.appendChild(option);
         });
-    });
+    } else {
+        alert("База не найдена!");
+        window.location.href = "index.html";
+    }
 
-    // Сортируем статусы по полю order
-    statuses.sort((a, b) => a.order - b.order);
-
-    // Добавляем отсортированные статусы в селектор
-    statuses.forEach(status => {
-        const option = document.createElement("option");
-        option.value = status.id;
-        option.textContent = status.name;
-        statusSelect.appendChild(option);
-    });
-
+    // Если редактируется страница, загружаем её статус
     if (pageId) {
         await loadPageStatus(userUID);
     }
 }
 
-// Загрузка статуса страницы
+
+// Загрузка статуса существующей страницы
 async function loadPageStatus(userUID) {
-    const pageDoc = await getDoc(doc(db, `users/${userUID}/pages`, pageId));
+    const pageDoc = await getDoc(doc(db, `users/${userUID}/bases/${baseId}/pages/${pageId}`));
     if (pageDoc.exists()) {
         const pageData = pageDoc.data();
         if (pageData.status) {
@@ -74,23 +89,26 @@ async function loadPageStatus(userUID) {
     }
 }
 
-// Загрузка данных страницы для редактирования с учётом baseId
+// Загрузка данных страницы для редактирования
 async function loadPageData(userUID) {
-    const pageDoc = await getDoc(doc(db, `users/${userUID}/pages`, pageId));
-    if (pageDoc.exists()) {
-        const pageData = pageDoc.data();
-        if (pageData.baseId === baseId) {
+    const baseRef = doc(db, `users/${userUID}/bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
+
+    if (baseSnap.exists()) {
+        const baseData = baseSnap.data();
+        const pageData = baseData.pages?.[pageId];
+
+        if (pageData) {
             pageTitle.value = pageData.title || "";
             pageDescription.value = pageData.description || "";
+            statusSelect.value = pageData.status || "";
         } else {
-            alert("Страница не найдена в данной базе!");
+            alert("Страница не найдена!");
             window.location.href = `index.html?baseId=${baseId}`;
         }
-    } else {
-        alert("Страница не найдена!");
-        window.location.href = `index.html?baseId=${baseId}`;
     }
 }
+
 
 // Инициализация при загрузке страницы
 onAuthStateChanged(auth, async (user) => {
@@ -105,6 +123,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+
 // Сохранение страницы
 savePageBtn.addEventListener("click", async () => {
     const title = pageTitle.value.trim();
@@ -114,29 +133,45 @@ savePageBtn.addEventListener("click", async () => {
     if (title && status) {
         const user = auth.currentUser;
         if (user) {
+            const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+            const baseSnap = await getDoc(baseRef);
+
+            let pages = {};
+            if (baseSnap.exists()) {
+                const baseData = baseSnap.data();
+                pages = baseData.pages || {}; // Загружаем существующий объект pages
+            }
+
             const pageData = {
                 title,
                 description,
                 status,
-                baseId, // Добавляем baseId
-                updatedAt: new Date()
+                updatedAt: new Date(),
             };
 
             if (pageId) {
-                await setDoc(doc(db, `users/${user.uid}/pages`, pageId), pageData, { merge: true });
+                // Обновление существующей страницы
+                pages[pageId] = { ...pages[pageId], ...pageData };
             } else {
+                // Создание новой страницы с уникальным ID
+                const newPageId = Date.now().toString(); // Генерируем уникальный ID (можно использовать UUID)
                 pageData.createdAt = new Date();
-                await addDoc(collection(db, `users/${user.uid}/pages`), pageData);
+                pages[newPageId] = pageData;
             }
 
-            window.location.href = `index.html?baseId=${baseId}`
+            // Обновляем документ базы с вложенным объектом pages
+            await setDoc(baseRef, { pages }, { merge: true });
+
+            window.location.href = `index.html?baseId=${baseId}`;
         }
     } else {
         alert("Пожалуйста, заполните все обязательные поля.");
     }
 });
 
+
+
 // Отмена
 cancelBtn.addEventListener("click", () => {
-    window.location.href = `index.html?baseId=${baseId}`
+    window.location.href = `index.html?baseId=${baseId}`;
 });
