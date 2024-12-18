@@ -51,31 +51,35 @@ addPageBtn.addEventListener('click', () => {
   window.location.href = `add-page.html?baseId=${baseId}`;
 });
 
-// Загрузка статусов из Firebase (типа Map)
+// Загрузка статусов из Firestore
 async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
   try {
-    const statusesRef = doc(db, `users/${user.uid}/bases/${baseId}`);
-    const statusesDoc = await getDoc(statusesRef);
-
-    if (statusesDoc.exists()) {
-      const data = statusesDoc.data();
-
-      // Преобразование объекта статусов в массив и сортировка по 'order'
-      statuses = Object.entries(data.statuses || {}).map(([id, status]) => ({
-        id,
-        ...status,
-      })).sort((a, b) => (a.order || 0) - (b.order || 0)); // Сортировка по order
-
-      renderStatusTabs();
-    } else {
-      console.warn('Документ базы не найден или статусы отсутствуют.');
+    const baseDoc = await getDoc(doc(db, "bases", baseId));
+    if (!baseDoc.exists()) {
+      alert("База данных не найдена.");
+      return;
     }
+
+    const baseData = baseDoc.data();
+    const statusesMap = baseData.statuses || {};
+
+    statuses = Object.entries(statusesMap).map(([id, data]) => ({
+      id,
+      name: data.name,
+      order: data.order,
+      color: data.color || "gray",
+    }));
+
+    // Сортируем статусы по полю order
+    statuses.sort((a, b) => a.order - b.order);
+
+    renderStatusTabs();
   } catch (error) {
     console.error('Ошибка при загрузке статусов:', error);
-    alert('Не удалось загрузить статусы. Проверьте подключение.');
+    alert('Не удалось загрузить статусы.');
   }
 }
 
@@ -107,33 +111,34 @@ function renderStatusTabs() {
   statusTabs.prepend(allTab); // Кнопка "Все" всегда первая
 }
 
-
-// Загрузка страниц из Firebase (типа Map)
+// Загрузка страниц из Firestore
 async function loadPages() {
   const user = auth.currentUser;
   if (!user) return;
 
   try {
-    const pagesRef = doc(db, `users/${user.uid}/bases/${baseId}`);
-    const pagesDoc = await getDoc(pagesRef);
-
-    if (pagesDoc.exists()) {
-      const data = pagesDoc.data();
-      allPages = Object.entries(data.pages || {}).map(([id, page]) => ({
-        id,
-        ...page,
-      }));
-
-      renderPages('all');
-    } else {
-      console.warn('Документ базы не найден или страницы отсутствуют.');
+    const baseDoc = await getDoc(doc(db, "bases", baseId));
+    if (!baseDoc.exists()) {
+      alert("База данных не найдена.");
+      return;
     }
+
+    const baseData = baseDoc.data();
+    const pagesMap = baseData.pages || {};
+
+    allPages = Object.entries(pagesMap).map(([id, data]) => ({
+      id,
+      title: data.title,
+      description: data.description || "",
+      status: data.status,
+    }));
+
+    renderPages('all');
   } catch (error) {
     console.error('Ошибка при загрузке страниц:', error);
-    alert('Не удалось загрузить страницы. Проверьте подключение.');
+    alert('Не удалось загрузить страницы.');
   }
 }
-
 
 // Рендеринг страниц с учётом фильтрации по статусу
 function renderPages(filterStatus) {
@@ -166,9 +171,7 @@ function renderStatusLabel(statusId) {
   const status = statuses.find(s => s.id === statusId);
   if (!status) return '<span class="status-label" style="background-color: gray;">Неизвестно</span>';
 
-  const statusColors = { "нужно сделать": "red", "в работе": "orange", "готово": "green" };
-  const color = statusColors[status.name] || "gray";
-  return `<span class="status-label" style="background-color: ${color};">${status.name}</span>`;
+  return `<span class="status-label" style="background-color: ${status.color};">${status.name}</span>`;
 }
 
 // Открытие страницы редактирования

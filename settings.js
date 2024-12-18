@@ -34,7 +34,7 @@ const addStatusBtn = document.getElementById('add-status-btn');
 
 // Переход назад
 backBtn.addEventListener('click', () => {
-  window.location.href = `index.html?baseId=${baseId}`
+  window.location.href = `index.html?baseId=${baseId}`;
 });
 
 // Загрузка статусов из базы данных
@@ -42,7 +42,7 @@ async function loadStatuses() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseRef = doc(db, `bases/${baseId}`);
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {
@@ -111,7 +111,7 @@ addStatusBtn.addEventListener('click', async () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+    const baseRef = doc(db, `bases/${baseId}`);
     const baseSnap = await getDoc(baseRef);
 
     if (baseSnap.exists()) {
@@ -136,7 +136,7 @@ async function editStatus(id, newName) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseRef = doc(db, `bases/${baseId}`);
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {
@@ -154,7 +154,7 @@ async function deleteStatus(id) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseRef = doc(db, `bases/${baseId}`);
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {
@@ -172,7 +172,7 @@ async function swapOrders(statuses, fromIndex, toIndex) {
   const user = auth.currentUser;
   if (!user) return;
 
-  const baseRef = doc(db, `users/${user.uid}/bases/${baseId}`);
+  const baseRef = doc(db, `bases/${baseId}`);
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {

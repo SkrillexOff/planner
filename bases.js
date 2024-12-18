@@ -1,21 +1,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDocs, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
 
 // Инициализация Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
-    authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
-    projectId: "taskcalendarapp-bf3b3",
-    storageBucket: "taskcalendarapp-bf3b3.firebasestorage.app",
-    messagingSenderId: "482463811896",
-    appId: "1:482463811896:web:11700779551db85f8c59cd",
-    measurementId: "G-4V1NYWDVKF"
+  apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
+  authDomain: "taskcalendarapp-bf3b3.firebaseapp.com",
+  projectId: "taskcalendarapp-bf3b3",
+  storageBucket: "taskcalendarapp-bf3b3.firebasestorage.app",
+  messagingSenderId: "482463811896",
+  appId: "1:482463811896:web:11700779551db85f8c59cd",
+  measurementId: "G-4V1NYWDVKF",
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app); // Инициализация Firestore
+const db = getFirestore(app);
 
 // Элементы DOM
 const logoutBtn = document.getElementById("logout-btn");
@@ -29,9 +29,9 @@ const basesList = document.getElementById("bases-list");
 // Получение текущего пользователя
 auth.onAuthStateChanged((user) => {
   if (user) {
+    ensureUserData(user.uid); // Убедимся, что пользовательские данные существуют
     loadBases(user.uid);
   } else {
-    // Если пользователь не авторизован, перенаправить на auth.html
     window.location.href = "auth.html";
   }
 });
@@ -69,41 +69,72 @@ saveBaseBtn.addEventListener("click", async () => {
   }
 
   try {
-    // Сохраняем базу внутри пользователя (users/{userId}/bases)
-    await addDoc(collection(db, `users/${user.uid}/bases`), {
+    // Создаём уникальный ID для базы
+    const baseId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Сохраняем базу в коллекции `bases`
+    const baseData = {
       name: baseName,
-      createdAt: new Date()
+      owner: user.uid,
+      createdAt: new Date(),
+    };
+    await setDoc(doc(db, `bases`, baseId), baseData);
+
+    // Обновляем данные пользователя (добавляем ссылку на базу в `users/${user.uid}/bases`)
+    const userRef = doc(db, `users`, user.uid);
+    await updateDoc(userRef, {
+      [`bases.${baseId}`]: baseName, // Обновляем объект bases
     });
 
     baseNameInput.value = ""; // Очистить инпут
     modal.classList.add("hidden"); // Закрыть модальное окно
   } catch (error) {
     console.error("Ошибка при создании базы:", error);
+    alert("Не удалось сохранить базу. Проверьте подключение к сети и повторите попытку.");
   }
 });
 
 // Загрузка списка баз
 function loadBases(userId) {
-  const basesRef = collection(db, `users/${userId}/bases`);
+  const basesRef = query(collection(db, `bases`));
 
-  // Реальное время: отслеживание изменений в коллекции
-  onSnapshot(basesRef, (snapshot) => {
-    basesList.innerHTML = ""; // Очистить список
-    if (!snapshot.empty) {
-      snapshot.forEach((doc) => {
-        const base = doc.data();
-        const li = document.createElement("li");
-        li.textContent = base.name;
-        li.dataset.id = doc.id; // Сохранить ID базы
-        li.addEventListener("click", () => {
-          window.location.href = `index.html?baseId=${doc.id}`;
+  onSnapshot(
+    basesRef,
+    (snapshot) => {
+      basesList.innerHTML = ""; // Очистить список
+      if (!snapshot.empty) {
+        snapshot.forEach((doc) => {
+          const base = doc.data();
+          if (base.owner === userId) {
+            const li = document.createElement("li");
+            li.textContent = base.name;
+            li.dataset.id = doc.id; // Сохранить ID базы
+            li.addEventListener("click", () => {
+              window.location.href = `index.html?baseId=${doc.id}`;
+            });
+            basesList.appendChild(li);
+          }
         });
-        basesList.appendChild(li);
-      });
-    } else {
-      basesList.innerHTML = "<li>Базы отсутствуют.</li>";
+      } else {
+        basesList.innerHTML = "<li>Базы отсутствуют.</li>";
+      }
+    },
+    (error) => {
+      console.error("Ошибка при загрузке баз:", error);
     }
-  }, (error) => {
-    console.error("Ошибка при загрузке баз:", error);
-  });
+  );
+}
+
+// Убедиться, что пользовательские данные существуют
+async function ensureUserData(userId) {
+  const userRef = doc(db, `users`, userId);
+  const userData = {
+    identifier: userId,
+    bases: {},
+  };
+  try {
+    await setDoc(userRef, userData, { merge: true });
+  } catch (error) {
+    console.error("Ошибка при проверке данных пользователя:", error);
+  }
 }
