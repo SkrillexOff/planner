@@ -105,9 +105,14 @@ function loadBases(userId) {
       if (!snapshot.empty) {
         snapshot.forEach((doc) => {
           const base = doc.data();
-          if (base.owner === userId) {
+
+          // Проверяем, является ли пользователь владельцем базы или включён в sharedWith
+          const isOwner = base.owner === userId;
+          const isSharedWith = base.sharedWith && userId in base.sharedWith; // Проверяем ключ в объекте
+
+          if (isOwner || isSharedWith) {
             const li = document.createElement("li");
-            li.textContent = base.name;
+            li.textContent = base.name + (isSharedWith ? " (Shared)" : ""); // Добавляем пометку для баз, где пользователь shared
             li.dataset.id = doc.id; // Сохранить ID базы
             li.addEventListener("click", () => {
               window.location.href = `index.html?baseId=${doc.id}`;
@@ -124,6 +129,8 @@ function loadBases(userId) {
     }
   );
 }
+
+
 
 // Убедиться, что пользовательские данные существуют
 async function ensureUserData(userId) {

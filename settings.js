@@ -31,6 +31,8 @@ const backBtn = document.getElementById('back-btn');
 const statusList = document.getElementById('status-list');
 const newStatusInput = document.getElementById('new-status');
 const addStatusBtn = document.getElementById('add-status-btn');
+const newMemberInput = document.getElementById('new-member');
+const addMemberBtn = document.getElementById('add-member-btn');
 
 // Переход назад
 backBtn.addEventListener('click', () => {
@@ -131,67 +133,26 @@ addStatusBtn.addEventListener('click', async () => {
   }
 });
 
-// Редактирование статуса
-async function editStatus(id, newName) {
-  const user = auth.currentUser;
-  if (!user) return;
+// Добавление нового участника
+addMemberBtn.addEventListener('click', async () => {
+  const newMember = newMemberInput.value.trim();
+  if (newMember) {
+    const baseRef = doc(db, `bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
 
-  const baseRef = doc(db, `bases/${baseId}`);
-  const baseSnap = await getDoc(baseRef);
+    if (baseSnap.exists()) {
+      const sharedWith = baseSnap.data().sharedWith || {};
+      sharedWith[newMember] = null; // Устанавливаем значение null
 
-  if (baseSnap.exists()) {
-    const statuses = baseSnap.data().statuses || {};
-    if (statuses[id]) {
-      statuses[id].name = newName;
-      await updateDoc(baseRef, { statuses });
-      loadStatuses();
+      await updateDoc(baseRef, { sharedWith });
+      newMemberInput.value = '';
+      alert(`Участник "${newMember}" успешно добавлен!`);
+    } else {
+      alert("База не найдена.");
+      window.location.href = "index.html";
     }
   }
-}
-
-// Удаление статуса
-async function deleteStatus(id) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const baseRef = doc(db, `bases/${baseId}`);
-  const baseSnap = await getDoc(baseRef);
-
-  if (baseSnap.exists()) {
-    const statuses = baseSnap.data().statuses || {};
-    if (statuses[id]) {
-      delete statuses[id];
-      await updateDoc(baseRef, { statuses });
-      loadStatuses();
-    }
-  }
-}
-
-// Обновление порядка статусов
-async function swapOrders(statuses, fromIndex, toIndex) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const baseRef = doc(db, `bases/${baseId}`);
-  const baseSnap = await getDoc(baseRef);
-
-  if (baseSnap.exists()) {
-    const statusesMap = baseSnap.data().statuses || {};
-    const fromStatus = statuses[fromIndex];
-    const toStatus = statuses[toIndex];
-
-    // Меняем порядок местами
-    const tempOrder = fromStatus.order;
-    fromStatus.order = toStatus.order;
-    toStatus.order = tempOrder;
-
-    statusesMap[fromStatus.id] = fromStatus;
-    statusesMap[toStatus.id] = toStatus;
-
-    await updateDoc(baseRef, { statuses: statusesMap });
-    loadStatuses();
-  }
-}
+});
 
 // Проверка авторизации
 onAuthStateChanged(auth, (user) => {
