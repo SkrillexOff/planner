@@ -32,10 +32,83 @@ const statusList = document.getElementById('status-list');
 const newStatusInput = document.getElementById('new-status');
 const addStatusBtn = document.getElementById('add-status-btn');
 
+const participantList = document.getElementById('participant-list');
+const newParticipantInput = document.getElementById('new-participant');
+const addParticipantBtn = document.getElementById('add-participant-btn');
+
 // Переход назад
 backBtn.addEventListener('click', () => {
   window.location.href = `index.html?baseId=${baseId}`;
 });
+
+// Загрузка участников из базы данных
+async function loadParticipants() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const baseRef = doc(db, `bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
+
+  if (baseSnap.exists()) {
+    const sharedWith = baseSnap.data().sharedWith || {}; // Получаем список участников
+    renderParticipants(Object.keys(sharedWith));
+  }
+}
+
+// Рендеринг списка участников
+function renderParticipants(participants) {
+  participantList.innerHTML = '';
+  participants.forEach(participant => {
+    const participantItem = document.createElement('li');
+    participantItem.textContent = participant;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Удалить';
+    removeBtn.addEventListener('click', () => removeParticipant(participant));
+
+    participantItem.appendChild(removeBtn);
+    participantList.appendChild(participantItem);
+  });
+}
+
+// Добавление нового участника
+addParticipantBtn.addEventListener('click', async () => {
+  const newParticipant = newParticipantInput.value.trim();
+  if (newParticipant) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const baseRef = doc(db, `bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
+
+    if (baseSnap.exists()) {
+      const sharedWith = baseSnap.data().sharedWith || {};
+      sharedWith[newParticipant] = null;
+
+      await updateDoc(baseRef, { sharedWith });
+      newParticipantInput.value = '';
+      loadParticipants();
+    }
+  }
+});
+
+// Удаление участника
+async function removeParticipant(participant) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const baseRef = doc(db, `bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
+
+  if (baseSnap.exists()) {
+    const sharedWith = baseSnap.data().sharedWith || {};
+    if (sharedWith[participant] !== undefined) {
+      delete sharedWith[participant];
+      await updateDoc(baseRef, { sharedWith });
+      loadParticipants();
+    }
+  }
+}
 
 // Загрузка статусов из базы данных
 async function loadStatuses() {
@@ -197,6 +270,7 @@ async function swapOrders(statuses, fromIndex, toIndex) {
 onAuthStateChanged(auth, (user) => {
   if (user) {
     loadStatuses();
+    loadParticipants();
   } else {
     alert("Вы не авторизованы!");
     window.location.href = 'auth.html';
