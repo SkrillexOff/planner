@@ -24,6 +24,10 @@ const statusTabs = document.getElementById('status-tabs');
 const addPageBtn = document.getElementById('add-page-btn');
 const loginMessage = document.getElementById('login-message');
 
+// Ссылки на элементы
+const userEmailElement = document.getElementById('user-email');
+const baseNameElement = document.getElementById('base-name');
+
 let allPages = [];
 let statuses = [];
 
@@ -186,12 +190,39 @@ pagesList.addEventListener("click", (event) => {
   window.location.href = `add-page.html?pageId=${pageId}&baseId=${baseId}`;
 });
 
-// Проверка авторизации
+// Загрузка почты пользователя и названия базы
+async function loadUserDataAndBaseName() {
+  const user = auth.currentUser;
+
+  if (user) {
+    // Отображаем почту пользователя
+    userEmailElement.textContent = `Пользователь: ${user.email}`;
+  }
+
+  try {
+    const baseDoc = await getDoc(doc(db, "bases", baseId));
+    if (!baseDoc.exists()) {
+      alert("База данных не найдена.");
+      return;
+    }
+
+    // Отображаем название базы
+    const baseData = baseDoc.data();
+    baseNameElement.textContent = `Текущая база: ${baseData.name}`;
+  } catch (error) {
+    console.error('Ошибка при загрузке названия базы:', error);
+    alert('Не удалось загрузить данные базы.');
+  }
+}
+
+// Проверка авторизации и загрузка данных
 onAuthStateChanged(auth, async user => {
   if (user) {
     document.getElementById('app').style.display = 'block';
     loginMessage.style.display = 'none';
 
+    // Загружаем данные о пользователе и базе
+    await loadUserDataAndBaseName();
     await loadStatuses();
     await loadPages();
   } else {

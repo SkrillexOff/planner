@@ -29,10 +29,17 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     await ensureUserData(user); // Передаем весь объект user
     loadBases(user.uid);
+
+    // Отображаем почту пользователя
+    const userEmailElement = document.getElementById("user-email");
+    if (userEmailElement) {
+      userEmailElement.textContent = user.email; // Устанавливаем почту пользователя
+    }
   } else {
     window.location.href = "auth.html";
   }
 });
+
 
 logoutBtn.addEventListener("click", () => {
   signOut(auth)
