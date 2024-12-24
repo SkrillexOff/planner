@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
 
 // Firebase инициализация
 const firebaseConfig = {
@@ -160,25 +160,36 @@ async function editStatus(id, newName) {
 
 // Удаление статуса
 async function deleteStatus(id) {
-  const user = auth.currentUser;
-  if (!user) return;
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
 
-  const baseRef = doc(db, `bases/${baseId}`);
-  const baseSnap = await getDoc(baseRef);
+    const baseRef = doc(db, `bases/${baseId}`);
+    const baseSnap = await getDoc(baseRef);
 
-  if (baseSnap.exists()) {
-    const statuses = baseSnap.data().statuses || {};
-    if (statuses[id] !== undefined) {
-      delete statuses[id];
-      await updateDoc(baseRef, { statuses });
+    if (baseSnap.exists()) {
+      const statuses = baseSnap.data().statuses || {};
+      if (statuses[id] !== undefined) {
+        delete statuses[id];
+        await updateDoc(baseRef, { statuses });
 
-      // Удаляем статус из коллекции
-      const statusRef = doc(db, `statuses/${id}`);
-      await updateDoc(statusRef, null); // Удаление из базы
-      loadStatuses();
+        // Удаляем документ статуса
+        const statusRef = doc(db, `statuses/${id}`);
+        await deleteDoc(statusRef);
+
+        console.log(`Статус ${id} успешно удалён.`);
+        loadStatuses();
+      } else {
+        console.warn(`Статус с ID ${id} не найден в базе.`);
+      }
+    } else {
+      console.warn('База не найдена.');
     }
+  } catch (error) {
+    console.error('Ошибка при удалении статуса:', error);
   }
 }
+
 
 // Обновление порядка статусов
 async function swapOrders(statuses, fromIndex, toIndex) {
@@ -197,7 +208,7 @@ async function swapOrders(statuses, fromIndex, toIndex) {
 }
 
 
-// Загрузка участников из базы данных
+// Загрузка участников с отображением email и владельца базы
 async function loadParticipants() {
   const user = auth.currentUser;
   if (!user) return;
@@ -206,31 +217,46 @@ async function loadParticipants() {
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {
-    const sharedWith = baseSnap.data().sharedWith || {}; // Получаем список участников
-    renderParticipants(Object.keys(sharedWith));
+    const sharedWith = baseSnap.data().sharedWith || {}; // Список участников
+    const ownerId = baseSnap.data().owner; // Владелец базы
+
+    const userIds = [...Object.keys(sharedWith), ownerId];
+    const userPromises = userIds.map(async (userId) => {
+      const userDoc = await getDoc(doc(db, `users/${userId}`));
+      return userDoc.exists() ? { id: userId, email: userDoc.data().email || "Неизвестно" } : null;
+    });
+
+    const users = (await Promise.all(userPromises)).filter(Boolean);
+
+    renderParticipants(users, ownerId);
   }
 }
 
-// Рендеринг списка участников
-function renderParticipants(participants) {
+// Рендеринг списка участников с email
+function renderParticipants(users, ownerId) {
   participantList.innerHTML = '';
-  participants.forEach(participant => {
+  users.forEach((user) => {
     const participantItem = document.createElement('li');
-    participantItem.textContent = participant;
+    participantItem.textContent = user.email;
 
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Удалить';
-    removeBtn.addEventListener('click', () => removeParticipant(participant));
+    if (user.id === ownerId) {
+      participantItem.textContent += ' (Владелец)';
+    } else {
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'Удалить';
+      removeBtn.addEventListener('click', () => removeParticipant(user.id));
 
-    participantItem.appendChild(removeBtn);
+      participantItem.appendChild(removeBtn);
+    }
+
     participantList.appendChild(participantItem);
   });
 }
 
-// Добавление нового участника
+// Добавление нового участника по email или ID
 addParticipantBtn.addEventListener('click', async () => {
-  const newParticipant = newParticipantInput.value.trim();
-  if (newParticipant) {
+  const input = newParticipantInput.value.trim();
+  if (input) {
     const user = auth.currentUser;
     if (!user) return;
 
@@ -238,20 +264,35 @@ addParticipantBtn.addEventListener('click', async () => {
     const baseSnap = await getDoc(baseRef);
 
     if (baseSnap.exists()) {
+      let userId = input;
+
+      // Проверяем, указан ли email вместо ID
+      if (input.includes('@')) {
+        const usersQuery = collection(db, 'users');
+        const userDocs = await getDocs(usersQuery);
+        const matchedUser = userDocs.docs.find((doc) => doc.data().email === input);
+
+        if (matchedUser) {
+          userId = matchedUser.id;
+        } else {
+          alert('Пользователь с таким email не найден.');
+          return;
+        }
+      }
+
       const sharedWith = baseSnap.data().sharedWith || {};
-      sharedWith[newParticipant] = null;
+      sharedWith[userId] = null;
 
       await updateDoc(baseRef, { sharedWith });
 
-      // Добавляем в joinedAt пользователя
-      const userRef = doc(db, `users/${newParticipant}`);
+      // Обновляем joinedAt у пользователя
+      const userRef = doc(db, `users/${userId}`);
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
         // Если пользователя еще нет в коллекции users, создаем документ
         await setDoc(userRef, { joinedAt: { [baseId]: null } });
       } else {
-        // Если пользователь уже существует, обновляем его joinedAt
         const joinedAt = userSnap.data().joinedAt || {};
         joinedAt[baseId] = null;
         await updateDoc(userRef, { joinedAt });
