@@ -50,15 +50,13 @@ async function loadStatuses() {
   const baseSnap = await getDoc(baseRef);
 
   if (baseSnap.exists()) {
-    const statusRefs = baseSnap.data().statuses || {}; // Получаем ссылки на статусы
+    const statusRefs = baseSnap.data().statuses || {};
     const statusPromises = Object.keys(statusRefs).map(async (statusId) => {
       const statusDoc = await getDoc(doc(db, `statuses/${statusId}`));
       return statusDoc.exists() ? { id: statusId, ...statusDoc.data() } : null;
     });
 
     const statusesArray = (await Promise.all(statusPromises)).filter(Boolean);
-
-    // Сортируем статусы по полю `order`
     statusesArray.sort((a, b) => a.order - b.order);
 
     renderStatuses(statusesArray);
@@ -93,7 +91,7 @@ function renderStatuses(statuses) {
 
     statusItem.querySelector('.delete-status-btn').addEventListener('click', () => {
       if (confirm(`Удалить статус "${status.name}"?`)) {
-        deleteStatus(status.id);
+        deleteStatus(status.id, statuses);
       }
     });
 
@@ -113,31 +111,25 @@ function renderStatuses(statuses) {
   });
 }
 
+
 // Добавление нового статуса
 addStatusBtn.addEventListener('click', async () => {
   const newStatus = newStatusInput.value.trim();
   if (newStatus) {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const newStatusRef = await addDoc(collection(db, 'statuses'), {
-      name: newStatus,
-      order: 0 // временно ставим 0, обновим позже
-    });
-
     const baseRef = doc(db, `bases/${baseId}`);
     const baseSnap = await getDoc(baseRef);
 
     if (baseSnap.exists()) {
       const statuses = baseSnap.data().statuses || {};
+      const newOrder = Object.keys(statuses).length;
 
-      // Добавляем новый статус в базу
+      const newStatusRef = await addDoc(collection(db, 'statuses'), {
+        name: newStatus,
+        order: newOrder
+      });
+
       statuses[newStatusRef.id] = null;
       await updateDoc(baseRef, { statuses });
-
-      // Обновляем order нового статуса
-      const newOrder = Object.keys(statuses).length - 1;
-      await updateDoc(newStatusRef, { order: newOrder });
 
       newStatusInput.value = '';
       loadStatuses();
@@ -150,46 +142,33 @@ addStatusBtn.addEventListener('click', async () => {
 
 // Редактирование статуса
 async function editStatus(id, newName) {
-  const user = auth.currentUser;
-  if (!user) return;
-
   const statusRef = doc(db, `statuses/${id}`);
   await updateDoc(statusRef, { name: newName });
   loadStatuses();
 }
 
-// Удаление статуса
-async function deleteStatus(id) {
-  try {
-    const user = auth.currentUser;
-    if (!user) return;
+// Удаление статуса с обновлением порядка
+async function deleteStatus(id, statuses) {
+  const baseRef = doc(db, `bases/${baseId}`);
+  const baseSnap = await getDoc(baseRef);
 
-    const baseRef = doc(db, `bases/${baseId}`);
-    const baseSnap = await getDoc(baseRef);
+  if (baseSnap.exists()) {
+    const statusesData = baseSnap.data().statuses || {};
+    delete statusesData[id];
+    await updateDoc(baseRef, { statuses: statusesData });
 
-    if (baseSnap.exists()) {
-      const statuses = baseSnap.data().statuses || {};
-      if (statuses[id] !== undefined) {
-        delete statuses[id];
-        await updateDoc(baseRef, { statuses });
+    await deleteDoc(doc(db, `statuses/${id}`));
 
-        // Удаляем документ статуса
-        const statusRef = doc(db, `statuses/${id}`);
-        await deleteDoc(statusRef);
-
-        console.log(`Статус ${id} успешно удалён.`);
-        loadStatuses();
-      } else {
-        console.warn(`Статус с ID ${id} не найден в базе.`);
-      }
-    } else {
-      console.warn('База не найдена.');
+    // Обновляем порядок оставшихся статусов
+    const updatedStatuses = statuses.filter((status) => status.id !== id);
+    for (let i = 0; i < updatedStatuses.length; i++) {
+      const statusRef = doc(db, `statuses/${updatedStatuses[i].id}`);
+      await updateDoc(statusRef, { order: i });
     }
-  } catch (error) {
-    console.error('Ошибка при удалении статуса:', error);
+
+    loadStatuses();
   }
 }
-
 
 // Обновление порядка статусов
 async function swapOrders(statuses, fromIndex, toIndex) {
@@ -199,14 +178,12 @@ async function swapOrders(statuses, fromIndex, toIndex) {
   const fromStatusRef = doc(db, `statuses/${fromStatus.id}`);
   const toStatusRef = doc(db, `statuses/${toStatus.id}`);
 
-  // Меняем порядок местами
   const tempOrder = fromStatus.order;
   await updateDoc(fromStatusRef, { order: toStatus.order });
   await updateDoc(toStatusRef, { order: tempOrder });
 
   loadStatuses();
 }
-
 
 // Загрузка участников с отображением email и владельца базы
 async function loadParticipants() {
