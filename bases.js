@@ -84,27 +84,58 @@ saveBaseBtn.addEventListener("click", async () => {
   }
 });
 
-function loadBases(userId) {
-  const basesRef = query(collection(db, `bases`));
-  onSnapshot(basesRef, (snapshot) => {
-    basesList.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const base = doc.data();
-      const isOwner = base.owner === userId;
-      const isSharedWith = base.sharedWith && userId in base.sharedWith;
+async function loadBases(userId) {
+  const userRef = doc(db, `users/${userId}`);
+  const userSnapshot = await getDoc(userRef);
 
-      if (isOwner || isSharedWith) {
-        const li = document.createElement("li");
-        li.textContent = base.name + (isSharedWith ? " (Shared)" : "");
-        li.dataset.id = doc.id;
-        li.addEventListener("click", () => {
-          window.location.href = `index.html?baseId=${doc.id}`;
-        });
-        basesList.appendChild(li);
-      }
+  if (!userSnapshot.exists()) {
+    console.error("Данные пользователя не найдены.");
+    return;
+  }
+
+  const userData = userSnapshot.data();
+  const ownedBases = userData.bases || {}; // базы, где пользователь - владелец
+  const joinedBases = userData.joinedAt || {}; // базы, где пользователь - участник
+
+  // Собираем все уникальные идентификаторы баз
+  const allBaseIds = [
+    ...Object.keys(ownedBases),
+    ...Object.keys(joinedBases),
+  ];
+
+  // Загружаем данные баз
+  const basePromises = allBaseIds.map(async (baseId) => {
+    const baseDoc = await getDoc(doc(db, `bases/${baseId}`));
+    return baseDoc.exists() ? { id: baseId, ...baseDoc.data() } : null;
+  });
+
+  const bases = (await Promise.all(basePromises)).filter(Boolean);
+
+  // Рендерим базы
+  renderBases(bases, userId);
+}
+
+function renderBases(bases, userId) {
+  basesList.innerHTML = ""; // Очищаем контейнер
+
+  bases.forEach((base) => {
+    const isOwner = base.owner === userId;
+    const isShared = !isOwner; // База добавлена через joinedAt
+
+    const baseElement = document.createElement("div"); // Вместо <li>
+    baseElement.classList.add("base-item"); // Добавляем класс для стилизации
+    baseElement.textContent = `${base.name} ${isShared ? "(Участник)" : "(Владелец)"}`;
+    baseElement.dataset.id = base.id;
+
+    baseElement.addEventListener("click", () => {
+      window.location.href = `index.html?baseId=${base.id}`;
     });
+
+    basesList.appendChild(baseElement); // Добавляем элемент в контейнер
   });
 }
+
+
 
 // Убедиться, что пользовательские данные существуют
 async function ensureUserData(user) {

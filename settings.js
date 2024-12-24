@@ -242,6 +242,21 @@ addParticipantBtn.addEventListener('click', async () => {
       sharedWith[newParticipant] = null;
 
       await updateDoc(baseRef, { sharedWith });
+
+      // Добавляем в joinedAt пользователя
+      const userRef = doc(db, `users/${newParticipant}`);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // Если пользователя еще нет в коллекции users, создаем документ
+        await setDoc(userRef, { joinedAt: { [baseId]: null } });
+      } else {
+        // Если пользователь уже существует, обновляем его joinedAt
+        const joinedAt = userSnap.data().joinedAt || {};
+        joinedAt[baseId] = null;
+        await updateDoc(userRef, { joinedAt });
+      }
+
       newParticipantInput.value = '';
       loadParticipants();
     }
@@ -261,10 +276,22 @@ async function removeParticipant(participant) {
     if (sharedWith[participant] !== undefined) {
       delete sharedWith[participant];
       await updateDoc(baseRef, { sharedWith });
+
+      // Удаляем baseId из joinedAt пользователя
+      const userRef = doc(db, `users/${participant}`);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const joinedAt = userSnap.data().joinedAt || {};
+        delete joinedAt[baseId];
+        await updateDoc(userRef, { joinedAt });
+      }
+
       loadParticipants();
     }
   }
 }
+
 
 // Проверка авторизации
 onAuthStateChanged(auth, (user) => {

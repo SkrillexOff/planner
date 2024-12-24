@@ -91,3 +91,22 @@ p {
   margin-top: 32px;
   margin-bottom: 32px;
 }
+
+.bases-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Расстояние между элементами */
+}
+
+.base-item {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s ease;
+}
+
+.base-item:hover {
+  background-color: #eaeaea;
+}
