@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYI_LCb4mld3VEfIOU9D49gLV81gKTovE",
@@ -64,17 +64,18 @@ async function loadStatuses() {
     }
 
     const baseData = baseDoc.data();
-    const statusesMap = baseData.statuses || {};
+    const statusLinks = baseData.statuses || {};
 
-    statuses = Object.entries(statusesMap).map(([id, data]) => ({
-      id,
-      name: data.name,
-      order: data.order,
-      color: data.color || "gray",
-    }));
+    const statusPromises = Object.keys(statusLinks).map(async statusId => {
+      const statusDoc = await getDoc(doc(db, "statuses", statusId));
+      if (statusDoc.exists()) {
+        return { id: statusId, ...statusDoc.data() };
+      }
+    });
 
-    // Сортируем статусы по полю order
-    statuses.sort((a, b) => a.order - b.order);
+    statuses = (await Promise.all(statusPromises)).filter(Boolean);
+
+    statuses.sort((a, b) => a.order - b.order); // Сортируем статусы по order
 
     renderStatusTabs();
   } catch (error) {
@@ -124,14 +125,16 @@ async function loadPages() {
     }
 
     const baseData = baseDoc.data();
-    const pagesMap = baseData.pages || {};
+    const pageLinks = baseData.pages || {};
 
-    allPages = Object.entries(pagesMap).map(([id, data]) => ({
-      id,
-      title: data.title,
-      description: data.description || "",
-      status: data.status,
-    }));
+    const pagePromises = Object.keys(pageLinks).map(async pageId => {
+      const pageDoc = await getDoc(doc(db, "pages", pageId));
+      if (pageDoc.exists()) {
+        return { id: pageId, ...pageDoc.data() };
+      }
+    });
+
+    allPages = (await Promise.all(pagePromises)).filter(Boolean);
 
     renderPages('all');
   } catch (error) {
@@ -171,7 +174,7 @@ function renderStatusLabel(statusId) {
   const status = statuses.find(s => s.id === statusId);
   if (!status) return '<span class="status-label" style="background-color: gray;">Неизвестно</span>';
 
-  return `<span class="status-label" style="background-color: ${status.color};">${status.name}</span>`;
+  return `<span class="status-label" style="background-color: #E4E2D9; color: #000;">${status.name}</span>`;
 }
 
 // Открытие страницы редактирования

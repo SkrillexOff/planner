@@ -39,21 +39,33 @@ const baseId = urlParams.get("baseId");
 async function loadStatuses(userUID) {
     statusSelect.innerHTML = ""; // Очищаем селектор перед загрузкой
 
-    const baseDoc = await getDoc(doc(db, "bases", baseId)); // Получаем документ базы
+    // Получаем документ базы
+    const baseDoc = await getDoc(doc(db, `bases/${baseId}`));
 
     if (baseDoc.exists()) {
         const baseData = baseDoc.data();
-        const statuses = baseData.statuses;
+        const statusLinks = baseData.statuses || {}; // Ссылки на статусы
 
-        if (statuses) {
-            const statusesArray = Object.entries(statuses).map(([id, status]) => ({
-                id,
-                name: status.name,
-                order: status.order
-            }));
+        if (Object.keys(statusLinks).length > 0) {
+            const statusEntries = await Promise.all(
+                Object.keys(statusLinks).map(async (statusId) => {
+                    const statusDoc = await getDoc(doc(db, `statuses/${statusId}`));
+                    if (statusDoc.exists()) {
+                        const statusData = statusDoc.data();
+                        return {
+                            id: statusId,
+                            name: statusData.name,
+                            order: statusData.order
+                        };
+                    }
+                    return null;
+                })
+            );
 
-            // Сортируем статусы по полю order
-            statusesArray.sort((a, b) => a.order - b.order);
+            // Фильтруем отсутствующие статусы и сортируем их
+            const statusesArray = statusEntries
+                .filter(status => status !== null)
+                .sort((a, b) => a.order - b.order);
 
             // Добавляем статусы в селектор
             statusesArray.forEach(status => {
@@ -77,39 +89,29 @@ async function loadStatuses(userUID) {
     }
 }
 
-
 // Загрузка статуса существующей страницы
 async function loadPageStatus(userUID) {
-    const baseDoc = await getDoc(doc(db, "bases", baseId));
-    if (baseDoc.exists()) {
-        const baseData = baseDoc.data();
-        const pages = baseData.pages || {};
-
-        if (pages[pageId] && pages[pageId].status) {
-            statusSelect.value = pages[pageId].status;
+    const pageDoc = await getDoc(doc(db, "pages", pageId));
+    if (pageDoc.exists()) {
+        const pageData = pageDoc.data();
+        if (pageData.status) {
+            statusSelect.value = pageData.status;
         }
     }
 }
+
 // Загрузка данных страницы для редактирования
 async function loadPageData(userUID) {
-    const baseDoc = await getDoc(doc(db, "bases", baseId));
+    const pageDoc = await getDoc(doc(db, "pages", pageId));
 
-    if (baseDoc.exists()) {
-        const baseData = baseDoc.data();
-        const pages = baseData.pages || {};
-
-        if (pages[pageId]) {
-            const pageData = pages[pageId];
-            pageTitle.value = pageData.title || "";
-            pageDescription.value = pageData.description || "";
-            statusSelect.value = pageData.status || "";
-        } else {
-            alert("Страница не найдена!");
-            window.location.href = `index.html?baseId=${baseId}`;
-        }
+    if (pageDoc.exists()) {
+        const pageData = pageDoc.data();
+        pageTitle.value = pageData.title || "";
+        pageDescription.value = pageData.description || "";
+        statusSelect.value = pageData.status || "";
     } else {
-        alert("База не найдена!");
-        window.location.href = "index.html";
+        alert("Страница не найдена!");
+        window.location.href = `index.html?baseId=${baseId}`;
     }
 }
 
@@ -135,42 +137,53 @@ savePageBtn.addEventListener("click", async () => {
     if (title && status) {
         const user = auth.currentUser;
         if (user) {
-            const baseDocRef = doc(db, "bases", baseId);
-            const baseDoc = await getDoc(baseDocRef);
-
-            if (baseDoc.exists()) {
-                const baseData = baseDoc.data();
-                const pages = baseData.pages || {};
-
-                const pageData = {
+            if (pageId) {
+                // Обновление существующей страницы
+                const pageDocRef = doc(db, "pages", pageId);
+                await setDoc(pageDocRef, {
                     title,
                     description,
                     status,
+                    baseId,
                     updatedAt: new Date().toISOString(),
-                };
+                }, { merge: true });
 
-                if (pageId) {
-                    // Обновление существующей страницы
-                    pages[pageId] = { ...pages[pageId], ...pageData };
-                } else {
-                    // Создание новой страницы
-                    const newPageId = `page_${Date.now()}`;
-                    pages[newPageId] = { ...pageData, createdAt: new Date().toISOString() };
+                const baseDocRef = doc(db, "bases", baseId);
+                const baseDoc = await getDoc(baseDocRef);
+                if (baseDoc.exists()) {
+                    const baseData = baseDoc.data();
+                    const pages = baseData.pages || {};
+                    pages[pageId] = null; // Ссылка на страницу
+                    await setDoc(baseDocRef, { pages }, { merge: true });
                 }
-
-                // Обновляем документ базы
-                await setDoc(baseDocRef, { pages }, { merge: true });
-                window.location.href = `index.html?baseId=${baseId}`;
             } else {
-                alert("База не найдена!");
-                window.location.href = "index.html";
+                // Создание новой страницы
+                const newPageId = `page_${Date.now()}`;
+                const pageDocRef = doc(db, "pages", newPageId);
+                await setDoc(pageDocRef, {
+                    title,
+                    description,
+                    status,
+                    baseId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                });
+
+                const baseDocRef = doc(db, "bases", baseId);
+                const baseDoc = await getDoc(baseDocRef);
+                if (baseDoc.exists()) {
+                    const baseData = baseDoc.data();
+                    const pages = baseData.pages || {};
+                    pages[newPageId] = null; // Ссылка на страницу
+                    await setDoc(baseDocRef, { pages }, { merge: true });
+                }
             }
+            window.location.href = `index.html?baseId=${baseId}`;
         }
     } else {
         alert("Пожалуйста, заполните все обязательные поля.");
     }
 });
-
 
 // Отмена
 cancelBtn.addEventListener("click", () => {
