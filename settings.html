@@ -6,12 +6,22 @@
   <title>Настройки</title>
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="settings.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
 </head>
 <body>
   <div id="loader">
-    <div class="spinner"></div>
+    <div id="lottie-container" style="width: 200px; height: 200px;"></div>
+    <script>
+      lottie.loadAnimation({
+        container: document.getElementById('lottie-container'), // контейнер для анимации
+        renderer: 'svg', // тип рендеринга ('svg', 'canvas', 'html')
+        loop: true, // зацикливание
+        autoplay: true, // автозапуск
+        path: 'cf180fee.json' // путь к JSON-файлу с анимацией
+      });
+    </script>    
   </div>
-  
+
   <div id="settings-container">
     <button id="back-btn">Назад</button>
     <div id="status-settings">
