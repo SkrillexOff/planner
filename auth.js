@@ -1,4 +1,3 @@
-// auth.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 
@@ -16,38 +15,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const loginButton = document.getElementById('login-btn');
-const registerButton = document.getElementById('register-btn');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
+const loginButton = document.getElementById('login-btn');
+const registerButton = document.getElementById('register-btn');
 
-loginButton.addEventListener('click', async () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "bases.html";  // Перенаправление после входа
-  } catch (error) {
-    console.error("Error logging in: ", error.message);
-  }
-});
+// Вход
+if (loginButton) {
+  loginButton.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
 
-registerButton.addEventListener('click', async () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    window.location.href = "bases.html";  // Перенаправление после регистрации
-  } catch (error) {
-    console.error("Error registering: ", error.message);
-  }
-});
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = "bases.html";
+    } catch (error) {
+      console.error("Ошибка входа: ", error.message);
+    }
+  });
+}
+
+// Регистрация
+if (registerButton) {
+  registerButton.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      window.location.href = "bases.html";
+    } catch (error) {
+      console.error("Ошибка регистрации: ", error.message);
+    }
+  });
+}
 
 // Проверка авторизации
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    window.location.href = "bases.html";  // Если пользователь авторизован, перенаправляем на главную
+    window.location.href = "bases.html";
   }
 });

@@ -318,6 +318,6 @@ onAuthStateChanged(auth, (user) => {
     loadParticipants();
   } else {
     alert("Вы не авторизованы!");
-    window.location.href = 'auth.html';
+    window.location.href = 'login.html';
   }
 });

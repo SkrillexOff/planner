@@ -36,7 +36,7 @@ auth.onAuthStateChanged(async (user) => {
       userEmailElement.textContent = user.email; // Устанавливаем почту пользователя
     }
   } else {
-    window.location.href = "auth.html";
+    window.location.href = "login.html";
   }
 });
 
@@ -44,7 +44,7 @@ auth.onAuthStateChanged(async (user) => {
 logoutBtn.addEventListener("click", () => {
   signOut(auth)
     .then(() => {
-      window.location.href = "auth.html";
+      window.location.href = "login.html";
     })
     .catch((error) => {
       console.error("Ошибка выхода:", error);

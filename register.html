@@ -1,23 +1,19 @@
-<!-- auth.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Авторизация и Регистрация</title>
+  <title>Регистрация</title>
   <script type="module" src="auth.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="auth-container">
-    <h1>Вход в систему</h1>
+    <h1>Регистрация</h1>
     <input type="email" id="email" placeholder="Введите email" required>
     <input type="password" id="password" placeholder="Введите пароль" required>
-    <button id="login-btn">Войти</button>
     <button id="register-btn">Зарегистрироваться</button>
-  </div>
-  <div id="message-container" style="display: none;">
-    <p>Пожалуйста, войдите в систему, чтобы продолжить.</p>
+    <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
   </div>
 </body>
 </html>
