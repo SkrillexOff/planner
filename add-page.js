@@ -30,6 +30,8 @@ const pageDescription = document.getElementById("page-description");
 const savePageBtn = document.getElementById("save-page-btn");
 const cancelBtn = document.getElementById("cancel-btn");
 
+const loader = document.getElementById('loader');
+
 // Получение параметров из URL
 const urlParams = new URLSearchParams(window.location.search);
 const pageId = urlParams.get("pageId");
@@ -115,12 +117,30 @@ async function loadPageData(userUID) {
     }
 }
 
+// Показ лоадера
+function showLoader() {
+    loader.style.display = 'flex';
+}
+
+// Скрытие лоадера
+function hideLoader() {
+    loader.style.display = 'none';
+}
+
 // Инициализация при загрузке страницы
 onAuthStateChanged(auth, async (user) => {
+    showLoader();  // Показ лоадера при старте
     if (user) {
-        await loadStatuses(user.uid);
-        if (pageId) {
-            await loadPageData(user.uid);
+        try {
+            await loadStatuses(user.uid);
+            if (pageId) {
+                await loadPageData(user.uid);
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки данных", error);
+            alert("Ошибка загрузки данных");
+        } finally {
+            hideLoader();  // Скрытие лоадера после завершения загрузки
         }
     } else {
         alert("Вы не авторизованы!");

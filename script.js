@@ -215,18 +215,34 @@ async function loadUserDataAndBaseName() {
   }
 }
 
-// Проверка авторизации и загрузка данных
+function showLoader() {
+  document.getElementById('loader').style.display = 'flex';
+}
+
+function hideLoader() {
+  document.getElementById('loader').style.display = 'none';
+}
+
+// Проверка авторизации и загрузка данных с лоадером
 onAuthStateChanged(auth, async user => {
+  showLoader();  // Показываем лоадер при старте
+
   if (user) {
     document.getElementById('app').style.display = 'block';
     loginMessage.style.display = 'none';
 
-    // Загружаем данные о пользователе и базе
-    await loadUserDataAndBaseName();
-    await loadStatuses();
-    await loadPages();
+    try {
+      await loadUserDataAndBaseName();
+      await loadStatuses();
+      await loadPages();
+    } catch (error) {
+      console.error("Ошибка загрузки:", error);
+    } finally {
+      hideLoader();  // Скрываем лоадер после загрузки всех данных
+    }
   } else {
     document.getElementById('app').style.display = 'none';
     loginMessage.style.display = 'block';
+    hideLoader();
   }
 });

@@ -36,6 +36,8 @@ const participantList = document.getElementById('participant-list');
 const newParticipantInput = document.getElementById('new-participant');
 const addParticipantBtn = document.getElementById('add-participant-btn');
 
+const loader = document.getElementById('loader');
+
 // Переход назад
 backBtn.addEventListener('click', () => {
   window.location.href = `index.html?baseId=${baseId}`;
@@ -311,13 +313,36 @@ async function removeParticipant(participant) {
 }
 
 
-// Проверка авторизации
+// Показать лоадер
+function showLoader() {
+  loader.style.display = 'flex';
+}
+
+// Скрыть лоадер
+function hideLoader() {
+  loader.style.display = 'none';
+}
+
+// Включаем лоадер перед загрузкой данных
+showLoader();
+
+async function loadData() {
+  try {
+    await loadStatuses();
+    await loadParticipants();
+  } catch (error) {
+    console.error("Ошибка загрузки данных: ", error);
+    alert("Ошибка загрузки данных.");
+  } finally {
+    hideLoader();
+  }
+}
+
+// Запуск загрузки данных
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    loadStatuses();
-    loadParticipants();
+    loadData();
   } else {
-    alert("Вы не авторизованы!");
-    window.location.href = 'login.html';
+    window.location.href = 'auth.html';
   }
 });

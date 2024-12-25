@@ -24,6 +24,8 @@ const saveBaseBtn = document.getElementById("save-base-btn");
 const baseNameInput = document.getElementById("base-name");
 const basesList = document.getElementById("bases-list");
 
+const loader = document.getElementById("loader");
+
 // Получение текущего пользователя
 auth.onAuthStateChanged(async (user) => {
   if (user) {
@@ -92,25 +94,27 @@ saveBaseBtn.addEventListener("click", async () => {
 });
 
 async function loadBases(userId) {
+  // Показываем лоадер перед загрузкой
+  loader.style.display = "flex";
+
   const userRef = doc(db, `users/${userId}`);
   const userSnapshot = await getDoc(userRef);
 
   if (!userSnapshot.exists()) {
     console.error("Данные пользователя не найдены.");
+    loader.style.display = "none";
     return;
   }
 
   const userData = userSnapshot.data();
-  const ownedBases = userData.bases || {}; // базы, где пользователь - владелец
-  const joinedBases = userData.joinedAt || {}; // базы, где пользователь - участник
+  const ownedBases = userData.bases || {};
+  const joinedBases = userData.joinedAt || {};
 
-  // Собираем все уникальные идентификаторы баз
   const allBaseIds = [
     ...Object.keys(ownedBases),
     ...Object.keys(joinedBases),
   ];
 
-  // Загружаем данные баз
   const basePromises = allBaseIds.map(async (baseId) => {
     const baseDoc = await getDoc(doc(db, `bases/${baseId}`));
     return baseDoc.exists() ? { id: baseId, ...baseDoc.data() } : null;
@@ -118,7 +122,9 @@ async function loadBases(userId) {
 
   const bases = (await Promise.all(basePromises)).filter(Boolean);
 
-  // Рендерим базы
+  // Скрываем лоадер после загрузки
+  loader.style.display = "none";
+  
   renderBases(bases, userId);
 }
 
