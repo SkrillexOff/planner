@@ -135,18 +135,49 @@ function renderBases(bases, userId) {
     const isOwner = base.owner === userId;
     const isShared = !isOwner; // База добавлена через joinedAt
 
-    const baseElement = document.createElement("div"); // Вместо <li>
-    baseElement.classList.add("base-item"); // Добавляем класс для стилизации
-    baseElement.textContent = `${base.name} ${isShared ? "(Участник)" : "(Владелец)"}`;
+    // Создаём основной блок base-item
+    const baseElement = document.createElement("div");
+    baseElement.classList.add("base-item");
     baseElement.dataset.id = base.id;
 
+    // Добавляем аватар
+    const avatarElement = document.createElement("img");
+    avatarElement.classList.add("base-avatar");
+    avatarElement.src = "/images/base-avatar.svg"; // Укажите источник изображения или добавьте динамически
+    avatarElement.alt = "base-avatar";
+
+    // Создаём блок описания
+    const descriptionElement = document.createElement("div");
+    descriptionElement.classList.add("base-description");
+
+    // Добавляем название базы
+    const nameElement = document.createElement("div");
+    nameElement.classList.add("base-name");
+    nameElement.textContent = base.name;
+
+    // Добавляем роль (участник/владелец)
+    const roleElement = document.createElement("div");
+    roleElement.classList.add("base-role");
+    roleElement.textContent = isShared ? "(Участник)" : "(Владелец)";
+
+    // Собираем блок описания
+    descriptionElement.appendChild(nameElement);
+    descriptionElement.appendChild(roleElement);
+
+    // Собираем основной блок
+    baseElement.appendChild(avatarElement);
+    baseElement.appendChild(descriptionElement);
+
+    // Добавляем обработчик клика
     baseElement.addEventListener("click", () => {
       window.location.href = `index.html?baseId=${base.id}`;
     });
 
-    basesList.appendChild(baseElement); // Добавляем элемент в контейнер
+    // Добавляем base-item в контейнер
+    basesList.appendChild(baseElement);
   });
 }
+
 
 
 
