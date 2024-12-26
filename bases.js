@@ -140,11 +140,17 @@ function renderBases(bases, userId) {
     baseElement.classList.add("base-item");
     baseElement.dataset.id = base.id;
 
-    // Добавляем аватар
+    // Создаём обёртку для аватара
+    const avatarWrapper = document.createElement("div");
+    avatarWrapper.classList.add("avatar-wrapper");
+
+    // Добавляем аватар в обёртку
     const avatarElement = document.createElement("img");
     avatarElement.classList.add("base-avatar");
     avatarElement.src = "/images/base-avatar.svg"; // Укажите источник изображения или добавьте динамически
     avatarElement.alt = "base-avatar";
+
+    avatarWrapper.appendChild(avatarElement); // Помещаем img внутрь avatar-wrapper
 
     // Создаём блок описания
     const descriptionElement = document.createElement("div");
@@ -165,7 +171,7 @@ function renderBases(bases, userId) {
     descriptionElement.appendChild(roleElement);
 
     // Собираем основной блок
-    baseElement.appendChild(avatarElement);
+    baseElement.appendChild(avatarWrapper);  // Добавляем обёртку с аватаром
     baseElement.appendChild(descriptionElement);
 
     // Добавляем обработчик клика
@@ -177,6 +183,7 @@ function renderBases(bases, userId) {
     basesList.appendChild(baseElement);
   });
 }
+
 
 
 

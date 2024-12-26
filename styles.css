@@ -401,13 +401,19 @@ main{
   width: 100%;
 }
 
+.avatar-wrapper{
+  width: 64px;
+  height: 64px;
+  margin-right: 12px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
 .base-avatar{
   width: 64px;
   height: 64px;
   border-radius: 32px;
-  margin-right: 12px;
-  margin-top: 8px;
-  margin-bottom: 8px;
 }
 
 .base-name{
@@ -433,4 +439,8 @@ main{
 #user-email{
   font-size: 16px;
   font-weight: 500;
+}
+
+#create-base-btn{
+  margin-top: 32px;
 }
