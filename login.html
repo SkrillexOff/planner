@@ -12,22 +12,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="auth-container">
-    <div id="lottie-container" style="width: 223px; height: 223px; "></div>
-    <script>
-      lottie.loadAnimation({
-        container: document.getElementById('lottie-container'), // контейнер для анимации
-        renderer: 'svg', // тип рендеринга ('svg', 'canvas', 'html')
-        loop: true, // зацикливание
-        autoplay: true, // автозапуск
-        path: '739189f8.json' // путь к JSON-файлу с анимацией
-      });
-    </script> 
-    <h2>Вход</h2>
-    <input type="email" id="email" placeholder="Почта" required>
-    <input type="password" id="password" placeholder="Введите пароль" required>
-    <button id="login-btn">Войти</button>
-    <div class="regaway">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></div>
+  <div class="auth-page-container">
+    <div id="auth-container">
+      <div id="lottie-container" style="width: 223px; height: 223px; margin-bottom: 32px;"></div>
+      <script>
+        lottie.loadAnimation({
+          container: document.getElementById('lottie-container'), // контейнер для анимации
+          renderer: 'svg', // тип рендеринга ('svg', 'canvas', 'html')
+          loop: true, // зацикливание
+          autoplay: true, // автозапуск
+          path: '739189f8.json' // путь к JSON-файлу с анимацией
+        });
+      </script> 
+      <h2>Вход</h2>
+      <input type="email" id="email" placeholder="Почта" required>
+      <input type="password" id="password" placeholder="Введите пароль" required>
+      <button id="login-btn">Войти</button>
+      <div class="regaway">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></div>
+    </div>
   </div>
 </body>
 </html>
