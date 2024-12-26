@@ -6,14 +6,28 @@
   <title>Регистрация</title>
   <script type="module" src="auth.js"></script>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="auth-container">
-    <h1>Регистрация</h1>
+    <div id="lottie-container" style="width: 223px; height: 223px; "></div>
+    <script>
+      lottie.loadAnimation({
+        container: document.getElementById('lottie-container'), // контейнер для анимации
+        renderer: 'svg', // тип рендеринга ('svg', 'canvas', 'html')
+        loop: true, // зацикливание
+        autoplay: true, // автозапуск
+        path: '0971e659.json' // путь к JSON-файлу с анимацией
+      });
+    </script> 
+    <h2>Регистрация</h2>
     <input type="email" id="email" placeholder="Введите email" required>
     <input type="password" id="password" placeholder="Введите пароль" required>
     <button id="register-btn">Зарегистрироваться</button>
-    <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+    <div class="regaway">Уже есть аккаунт? <a href="login.html">Войти</a></p>
   </div>
 </body>
 </html>
