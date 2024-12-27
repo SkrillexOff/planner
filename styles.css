@@ -340,6 +340,16 @@ main{
   animation: shimmer 1.5s infinite;
 }
 
+.avatar-loader{
+  width: 32px;
+  height: 32px;
+  background-color: #EAE8DE;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #E4E2DC 25%, #F0EDE5 50%, #DCD8CF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 @keyframes shimmer {
   from {
     background-position: 200% 0;
@@ -366,7 +376,7 @@ main{
 .user-avatar-name{
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -385,6 +395,10 @@ main{
   width: 32px;
   height: 32px;
   border-radius: 16px;
+  background-color: #EAE8DE;
+  background: linear-gradient(90deg, #E4E2DC 25%, #F0EDE5 50%, #DCD8CF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
 #modal{
@@ -402,8 +416,10 @@ main{
 }
 
 .avatar-wrapper{
+  background-color: #EBEAE1;
   width: 64px;
   height: 64px;
+  border-radius: 32px;
   margin-right: 12px;
   margin-top: 8px;
   margin-bottom: 8px;
@@ -442,5 +458,21 @@ main{
 }
 
 #create-base-btn{
-  margin-top: 32px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.create-base-icon{
+  margin-top: 8px;
+  margin-bottom: 8px;
+  width: 64px;
+  height: 64px;
+  margin-right: 12px;
+}
+
+.create-base-text{
+  font-size: 16px;
+  font-weight: 500;
+  color: #9C998E;
 }

@@ -164,8 +164,8 @@ function renderPages(filterStatus) {
     pageItem.innerHTML = `
       <div>
         <h3>${page.title}</h3>
-        <p><strong>Описание:</strong> ${page.description || 'Нет описания'}</p>
-        <p><strong>Статус:</strong> ${renderStatusLabel(page.status)}</p>
+        <p>${page.description || 'Нет описания'}</p>
+        <p>${renderStatusLabel(page.status)}</p>
       </div>
     `;
 

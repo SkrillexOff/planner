@@ -164,7 +164,7 @@ function renderBases(bases, userId) {
     // Добавляем роль (участник/владелец)
     const roleElement = document.createElement("div");
     roleElement.classList.add("base-role");
-    roleElement.textContent = isShared ? "(Участник)" : "(Владелец)";
+    roleElement.textContent = isShared ? "Участник" : "Владелец";
 
     // Собираем блок описания
     descriptionElement.appendChild(nameElement);
