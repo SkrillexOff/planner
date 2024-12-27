@@ -18,6 +18,38 @@ const db = getFirestore(app);
 
 const saveBaseBtn = document.getElementById("save-base-btn");
 const baseNameInput = document.getElementById("base-name");
+const avatarButtons = document.querySelectorAll(".avatar-option");
+const avatarPreview = document.getElementById("avatar-preview");
+
+const avatarModal = document.getElementById("avatar-modal");
+const changeAvatarBtn = document.getElementById("change-avatar-btn");
+const closeModalBtn = document.getElementById("close-modal");
+
+let selectedAvatar = "base-avatar.png";  // Значение по умолчанию
+
+changeAvatarBtn.addEventListener("click", () => {
+    avatarModal.classList.remove("hidden");
+  });
+  
+  closeModalBtn.addEventListener("click", () => {
+    avatarModal.classList.add("hidden");
+  });
+  
+  // Закрытие модалки при выборе аватарки
+  avatarButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedAvatar = button.dataset.avatar;
+      avatarPreview.src = `images/avatars/${selectedAvatar}`;
+      avatarModal.classList.add("hidden");
+    });
+  });
+
+avatarButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectedAvatar = button.dataset.avatar;
+    avatarPreview.src = `images/avatars/${selectedAvatar}`;
+  });
+});
 
 saveBaseBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
@@ -38,6 +70,7 @@ saveBaseBtn.addEventListener("click", async () => {
       name: baseName,
       owner: user.uid,
       createdAt: new Date(),
+      avatar: selectedAvatar,  // Сохранение выбранного аватара
     };
     await setDoc(doc(db, `bases`, baseId), baseData);
 
@@ -53,3 +86,5 @@ saveBaseBtn.addEventListener("click", async () => {
     alert("Не удалось создать базу. Попробуйте снова.");
   }
 });
+
+

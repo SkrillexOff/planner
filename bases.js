@@ -97,7 +97,10 @@ function renderBases(bases, userId) {
 
     const avatarElement = document.createElement("img");
     avatarElement.classList.add("base-avatar");
-    avatarElement.src = "/images/base-avatar.svg";
+
+    // Подставляем выбранный аватар или дефолтный
+    const avatarSrc = base.avatar ? `/images/avatars/${base.avatar}` : "/images/avatars/base-avatar.png";
+    avatarElement.src = avatarSrc;
     avatarElement.alt = "base-avatar";
 
     avatarWrapper.appendChild(avatarElement);
@@ -126,6 +129,7 @@ function renderBases(bases, userId) {
     basesList.appendChild(baseElement);
   });
 }
+
 
 async function ensureUserData(user) {
   const userRef = doc(db, `users`, user.uid);
