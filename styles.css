@@ -449,6 +449,8 @@ main{
   flex-direction: column;
   border-bottom: 1px solid #E1DFD3;
   justify-content: center;
+  padding-top: 8px;
+  padding-bottom: 8px;
 
 }
 
@@ -466,8 +468,8 @@ main{
 .create-base-icon{
   margin-top: 8px;
   margin-bottom: 8px;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   margin-right: 12px;
 }
 
