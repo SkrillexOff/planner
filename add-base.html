@@ -10,67 +10,80 @@
 <body>
     <div class="auth-page-container">
         <div id="auth-container">
-            <header>
-                <button onclick="window.history.back()">Назад</button>
-            </header>       
-            <main class="add-base-container">
-                <input type="text" id="base-name" placeholder="Введите название базы">            
-            <div id="avatar-wrapper">
-                <img id="avatar-preview" src="images/avatars/base-avatar.png" alt="Аватар базы">
-            </div>
-            <button id="change-avatar-btn">Поменять аватар</button>            
-            <div id="avatar-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h2>Выбор аватарки</h2>
-                    <span id="close-modal" class="close">&times;</span>
-                    <div id="avatar-buttons">
-                        <div class="avatar-option" data-avatar="home.png">
-                            <img src="images/avatars/home.png" alt="Home">
+            <div class="menu-wrapper">
+                <div class="user-info">
+                    <div class="page-title-wrapper">
+                        <div onclick="window.history.back()">
+                            <img src="/images/back-button.svg" alt="back">
                         </div>
-                        <div class="avatar-option" data-avatar="work.png">
-                            <img src="images/avatars/work.png" alt="Work">
-                        </div>
-                        <div class="avatar-option" data-avatar="education.png">
-                            <img src="images/avatars/education.png" alt="Education">
-                        </div>
-                        <div class="avatar-option" data-avatar="food.png">
-                            <img src="images/avatars/food.png" alt="Food">
-                        </div>
-                        <div class="avatar-option" data-avatar="fire.png">
-                            <img src="images/avatars/fire.png" alt="Fire">
-                        </div>
-                        <div class="avatar-option" data-avatar="flash.png">
-                            <img src="images/avatars/flash.png" alt="Flash">
-                        </div>
-                        <div class="avatar-option" data-avatar="sos.png">
-                            <img src="images/avatars/sos.png" alt="SOS">
-                        </div>
-                        <div class="avatar-option" data-avatar="archive.png">
-                            <img src="images/avatars/archive.png" alt="Archive">
-                        </div>
-                        <div class="avatar-option" data-avatar="dog.png">
-                            <img src="images/avatars/dog.png" alt="Dog">
-                        </div>
-                        <div class="avatar-option" data-avatar="cat.png">
-                            <img src="images/avatars/cat.png" alt="Cat">
-                        </div>
-                        <div class="avatar-option" data-avatar="transport.png">
-                            <img src="images/avatars/transport.png" alt="Transport">
-                        </div>
-                        <div class="avatar-option" data-avatar="buy.png">
-                            <img src="images/avatars/buy.png" alt="Buy">
+                        <div class="page-title">
+                            Новая база
                         </div>
                     </div>
                 </div>
-            </div>
-            <section class="participants-container">
-                <h3>Участники базы</h3>
-                <ul id="participant-list"></ul>
-                <input type="text" id="new-participant" placeholder="Введите email участника">
-                <button id="add-participant-btn">Добавить участника</button>
-            </section>
-            <button id="save-base-btn">Добавить</button>
-        </main>
+            </div>     
+            <main class="add-base-container">  
+                <div class="avatar-container">
+                    <div id="avatar-wrapper">
+                        <img id="avatar-preview" src="images/avatars/base-avatar.png" alt="Аватар базы">
+                    </div>
+                    <button id="change-avatar-btn">Поменять аватар</button>
+                </div>         
+                <input type="text" id="base-name" placeholder="Введите название базы">           
+                <div id="avatar-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-content-wrapper">
+                            <h2>Выбор аватарки</h2>
+                            <span id="close-modal" class="close">&times;</span>
+                            <div id="avatar-buttons">
+                            <div class="avatar-option" data-avatar="home.png">
+                                <img src="images/avatars/home.png" alt="Home">
+                            </div>
+                            <div class="avatar-option" data-avatar="work.png">
+                                <img src="images/avatars/work.png" alt="Work">
+                            </div>
+                            <div class="avatar-option" data-avatar="education.png">
+                                <img src="images/avatars/education.png" alt="Education">
+                            </div>
+                            <div class="avatar-option" data-avatar="food.png">
+                                <img src="images/avatars/food.png" alt="Food">
+                            </div>
+                            <div class="avatar-option" data-avatar="fire.png">
+                                <img src="images/avatars/fire.png" alt="Fire">
+                            </div>
+                            <div class="avatar-option" data-avatar="flash.png">
+                                <img src="images/avatars/flash.png" alt="Flash">
+                            </div>
+                            <div class="avatar-option" data-avatar="sos.png">
+                                <img src="images/avatars/sos.png" alt="SOS">
+                            </div>
+                            <div class="avatar-option" data-avatar="archive.png">
+                                <img src="images/avatars/archive.png" alt="Archive">
+                            </div>
+                            <div class="avatar-option" data-avatar="dog.png">
+                                <img src="images/avatars/dog.png" alt="Dog">
+                            </div>
+                            <div class="avatar-option" data-avatar="cat.png">
+                                <img src="images/avatars/cat.png" alt="Cat">
+                            </div>
+                            <div class="avatar-option" data-avatar="transport.png">
+                                <img src="images/avatars/transport.png" alt="Transport">
+                            </div>
+                            <div class="avatar-option" data-avatar="buy.png">
+                                <img src="images/avatars/buy.png" alt="Buy">
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <section class="participants-container">
+                    <h3>Участники базы</h3>
+                    <ul id="participant-list"></ul>
+                    <input type="text" id="new-participant" placeholder="Введите email участника">
+                    <button id="add-participant-btn">Добавить участника</button>
+                </section>
+                <button id="save-base-btn">Добавить базу</button>
+            </main>
         </div>
     </div>
 </body>
