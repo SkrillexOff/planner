@@ -225,7 +225,7 @@ a {
 
 main{
   width: 100%;
-  margin-top: 56px;
+  margin-top: 48px;
 }
 
 
@@ -277,7 +277,7 @@ main{
 }
 
 .loader-bases-container{
-  margin-top: 56px;
+  margin-top: 48px;
   width: 100%;
 }
 
@@ -435,6 +435,7 @@ main{
 .base-name{
   font-size: 16px;
   font-weight: 500;
+  line-height: 132%;
 }
 
 .base-role{
