@@ -99,7 +99,7 @@ function renderBases(bases, userId) {
     avatarElement.classList.add("base-avatar");
 
     // Подставляем выбранный аватар или дефолтный
-    const avatarSrc = base.avatar ? `/images/avatars/${base.avatar}` : "/images/avatars/base-avatar.png";
+    const avatarSrc = base.avatar ? `/images/avatars/${base.avatar}` : "/images/base-avatar.png";
     avatarElement.src = avatarSrc;
     avatarElement.alt = "base-avatar";
 
